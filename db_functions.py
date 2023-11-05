@@ -89,15 +89,16 @@ def ban(code):
     
     try:
         # db 데이터 불러오기
-        f = open("db/banned_list.txt", "a")
-        banList = f.readlines()
+        with open("db/banned_list.txt", "r") as f:
+            banList = f.readlines()
         
         # 중복검사
         for i in range(len(banList)):
-            if banList[i] == code:
+            if banList[i].strip() == code:
                 return 1
         
-        f.writelines([code])
+        with open("db/banned_list.txt", "a") as f:
+            f.write(code + "\n")
 
         return 0
     except:
