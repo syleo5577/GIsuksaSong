@@ -1,5 +1,5 @@
 from datetime import datetime
-import link_functinos
+import link_functions
 import pickle
 import time
 
@@ -61,7 +61,7 @@ def dbAppend(gen, code):
         # 나중에 여기에 중복 검사 추가 예정
         
         # 시간 검사
-        lenth, title = link_functinos.getLengthAndTitle(code)
+        lenth, title = link_functions.getLengthAndTitle(code)
         if lenth > 600: # 10분 넘어가는 영상 거름
             return 2
         
