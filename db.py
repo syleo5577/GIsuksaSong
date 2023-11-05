@@ -4,7 +4,7 @@ import pickle
 import time
 
 # 메인 db 이름 형식
-# db_{학년 기수(이하 generation 이라고 표현함)}.pkl
+# db_{학년 기수}.pkl (학년 기수를 나타내는 변수는 generation)
 
 # 메인 db 데이터 형식
 # {index} {str 영상 코드} {str 영상 제목} {int 영상 길이} {int 등록 (유닉스) 시간} {int 비활성화 여부} {int 삭제 여부}
