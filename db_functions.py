@@ -70,7 +70,7 @@ def dbAppend(gen, code):
             return 3
         
         # (검사를 통과하면) db에 추가
-        lst.append([len(lst), code, title, lenth, int(time.time()), 0, 0])
+        lst.append([len(lst), code, title, lenth, (time.time()//1), 0, 0])
         return 0
         
     except:
