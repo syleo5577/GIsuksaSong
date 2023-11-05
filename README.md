@@ -8,6 +8,7 @@
 ### Files
     db_functions.py
     link_functions.py
+    main.py
 ### Usage
     1. 기숙사 선택
     2. 유튜브 링크 복사/붙여넣기
