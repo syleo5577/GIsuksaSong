@@ -66,7 +66,7 @@ def dbAppend(gen, code):
             return 2
         
         # 차단 여부 검사
-        if ban(code) == 1:
+        if ban(code, b=False) == 1:
             return 3
         
         # (검사를 통과하면) db에 추가
@@ -77,7 +77,7 @@ def dbAppend(gen, code):
         return 4
 
     
-def ban(code):
+def ban(code, b=True):
     """banned_list.txt에 유튜브 코드 영상 추가
 
     Args:
@@ -97,8 +97,9 @@ def ban(code):
             if banList[i].strip() == code:
                 return 1
         
-        with open("db/banned_list.txt", "a") as f:
-            f.write(code + "\n")
+        if b: # b=True면 밴함, False면 밴 안함
+            with open("db/banned_list.txt", "a") as f:
+                f.write(code + "\n")
 
         return 0
     except:
