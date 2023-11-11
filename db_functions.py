@@ -82,6 +82,7 @@ def ban(code, b=True):
 
     Args:
         code (str): 유튜브 영상 코드
+        b (bool): 실제 밴 여부(기본: True)
 
     Returns:
         int: 0이면 append 성공, 1이면 중복, 2면 실패(오류)
