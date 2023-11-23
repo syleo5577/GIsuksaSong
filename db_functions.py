@@ -16,16 +16,14 @@ import time
 #   삭제할 경우 db에만 기록이 남으며 웹사이트에서는 확인할 수 없음
 
 def getData(gen : int, ban=False):
-    """db에서 데이터 호출
+    """db 데이터 호출
 
     Args:
         gen (int): generation
-        ban (bool, optional): is ban DB. Defaults to False.
+        ban (bool, optional): is it ban_{gen}.pkl. Defaults to False.
 
     Returns:
-        int:
-            0: got data successfully
-            1: got wrong data(not a list)
+        list: DB data
     """
     
     if ban:
@@ -33,14 +31,17 @@ def getData(gen : int, ban=False):
     else:
         path = f"./db/db_{gen}.pkl"
     
-    with open(path, "rb") as fr:
-        arr = pickle.load(fr)
+    try:
+        with open(path, "rb") as fr:
+            arr = pickle.load(fr)
+    except:
+        arr = 0
     
     # db 데이터 받은거 return
     if type(arr) == list:
         return arr
     else: # 리스트가 아니면 초기화하고 return
-        with open(path, "rb") as fr:
+        with open(path, "wb") as fr:
             if ban:
                 pickle.dump(arr := [0], fr)
             else:
@@ -67,7 +68,7 @@ def setData(gen : int, data : list, ban=False):
         path = f"./db/db_{gen}.pkl"
     
     # db 데이터 갱신
-    with open(path, "rb") as fr:
+    with open(path, "wb") as fr:
         pickle.dump(data, fr)
     
     return 0
@@ -180,7 +181,9 @@ def ban(gen : int, code : str, isBan=True):
             for _ in range(l, i+1):
                 banTree.append(0)
             banTree[i] = code
-
+            
+        setData(gen, banTree, ban=True)
+        
         return 0
     except:
         return 1
