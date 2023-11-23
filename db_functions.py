@@ -29,22 +29,27 @@ def getData(gen, ban=False):
     """
     
     if ban:
-        path = f"./db/ban_{gen}.py"
+        path = f"./db/ban_{gen}.pkl"
     else:
         path = f"./db/db_{gen}.pkl"
     
     with open(path, "rb") as fr:
         arr : list = pickle.load(fr)
     
+    # db 데이터 받은거 return
     if type(arr) == list:
         return arr
-    else:
+    else: # 리스트가 아니면 리스트로 바꾸고
         with open(path, "rb") as fr:
-            pickle.dump([], fr)
+            if ban:
+                pickle.dump([], fr)
+            else:
+                pickle.dump([[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fr)
+        
         return []
     
 def updateData(gen, data, ban=False):
-    """db에 데이터 갱신함
+    """db 데이터 갱신함
 
     Args:
         gen (int): generation
@@ -55,11 +60,13 @@ def updateData(gen, data, ban=False):
         int: 0
     """
     
+    # 경로 설정
     if ban:
         path = f"./db/ban_{gen}.pkl"
     else:
         path = f"./db/db_{gen}.pkl"
     
+    # db 데이터 갱신
     with open(path, "rb") as fr:
         pickle.dump(data, fr)
     
@@ -89,7 +96,6 @@ def dbAppend(gen, code):
         if lenth > 600: # 10분 넘어가는 영상 거름
             return 3
         
-        
         # 차단 여부 검사
         if ban(code, b=False) == 2:
             return 3
@@ -106,7 +112,6 @@ def dbAppend(gen, code):
         return 0
     except:
         return 1
-
     
 def ban(gen, code, b=True):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
