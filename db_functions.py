@@ -4,11 +4,11 @@ import pickle
 import time
 
 # 메인 db 이름 형식
-# db_{학년 기수}.txt (학년 기수를 나타내는 변수는 generation, gen)
+# db_{학년 기수}.pkl (학년 기수를 나타내는 변수는 generation, gen)
 
 # 메인 db 데이터 형식
 # {index} {str 영상 코드} {str 영상 제목} {int 영상 길이} {int 등록 (유닉스) 시간} {int 비활성화 여부} {int 삭제 여부} {int 추천수(미사용)} {int 비추천수(미사용)}
-# 마지막 index는 [ {index}, 'not_a_video', ' ', {마지막으로 재생된 영상의 index}, 0, 1, 1, 0, 0 ]
+# 마지막 index는 [ {index}, 'not_a_video', ' ', {다음에 재생될 영상의 index}, 0, 1, 1, 0, 0 ]
 
 # 기본적인 기획:
 #   db에는 영상 코드, 제목, 길이, 등록한 시간, 비활성화 여부, 삭제 여부가 기록됨
@@ -17,7 +17,7 @@ import time
 
 # 기타 사항:
 
-def getData(gen, ban=False):
+def getData(gen : int, ban=False):
     """db에서 데이터 가져옴
 
     Args:
@@ -25,7 +25,9 @@ def getData(gen, ban=False):
         ban (bool, optional): is ban DB. Defaults to False.
 
     Returns:
-        int: 0
+        int:
+            0: got data successfully
+            1: got wrong data(not a list)
     """
     
     if ban:
@@ -34,23 +36,23 @@ def getData(gen, ban=False):
         path = f"./db/db_{gen}.pkl"
     
     with open(path, "rb") as fr:
-        arr : list = pickle.load(fr)
+        arr = pickle.load(fr)
     
     # db 데이터 받은거 return
     if type(arr) == list:
         return arr
-    else: # 리스트가 아니면 리스트로 바꾸고
+    else: # 리스트가 아니면 초기화하고 return
         with open(path, "rb") as fr:
             if ban:
-                pickle.dump([], fr)
+                pickle.dump(arr := [0], fr)
             else:
-                pickle.dump([[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fr)
+                pickle.dump(arr := [[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fr)
         
-        return []
+        return arr
     
-def updateData(gen, data, ban=False):
-    """db 데이터 갱신함
-
+def setData(gen : int, data : list, ban=False):
+    """받은 db 데이터 갱신
+    
     Args:
         gen (int): generation
         data (anything): updated db data
@@ -72,7 +74,18 @@ def updateData(gen, data, ban=False):
     
     return 0
 
-def dbAppend(gen, code):
+def setNextPlaylist(gen : int, i : int):
+    """set db_{gen}.pkl[-1][3] i
+
+    Args:
+        gen (int): generation
+        i (int): Playlist index number of video to play next
+    """
+    arr = getData(gen)
+    arr[-1][3] = i
+    setData(gen, arr)
+
+def dbAppend(gen : int, code : str):
     """db에 영상 추가
 
     Args:
@@ -94,26 +107,39 @@ def dbAppend(gen, code):
         # 시간 검사
         lenth, title = link_functions.getLengthAndTitle(code)
         if lenth > 600: # 10분 넘어가는 영상 거름
-            return 3
+            return 4
         
         # 차단 여부 검사
-        if ban(code, b=False) == 2:
+        if ban(code, isBan=False) == 2:
             return 3
         
-        # 나중에 여기에 중복 검사 추가 예정
+        # 중복 검사
+        st = arr[-1][3]
+        ed = arr[-1][0]
+        isDuplicated = False
+        for i in range(st, ed):
+            if arr[i][1] == code:
+                isDuplicated = True
+                break
+            else:
+                continue
+        
+        if isDuplicated:
+            return 2
         
         # (검사를 통과하면) db에 추가
         ld = arr.pop()
-        ld[0] += 1
+        while arr[ld[0]][3] == 1:
+            ld[0] += 1
         arr.append([len(arr), code, title, lenth, (time.time()//1), 0, 0])
         arr.append(ld)
-        updateData(gen, arr)
+        setData(gen, arr)
         
         return 0
     except:
         return 1
     
-def ban(gen, code, b=True):
+def ban(gen : int, code : str, isBan=True):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
 
     Args:
@@ -130,22 +156,38 @@ def ban(gen, code, b=True):
     
     try:
         # db 데이터 불러오기
-        banList = getData(gen, ban=True)
+        banTree = getData(gen, ban=True)
         
         # 중복검사
-        for i in range(len(banList)):
-            if banList[i] == code:
-                return 2
+        l = len(banTree)
+        if len(banTree) > 1:
+            i = 1
+            while True:
+                if i >= l:
+                    break
+                elif banTree[i] == 0:
+                    break
+                elif banTree[i] == code: # 중복된 경우
+                    return 2
+                else:
+                    i *= 2
+                    if code > banTree[i]:
+                        i += 1
+                    continue
+        else:
+            banTree = [0, code]
+            flag = False
         
-        banList.append(code)
-        if b: # b=True면 밴, False면 밴 안함
-            updateData(gen, banList, ban=True)
+        if isBan: # b=False이면 밴 안함
+            for _ in range(l, i+1):
+                banTree.append(0)
+            banTree[i] = code
 
         return 0
     except:
         return 1
 
-def deactivate(gen, i):
+def deactivate(gen : int, i : int):
     """db_{gen}.pkl에서 i번 인덱스의 비활성화 여부를 1로 바꿈
 
     Args:
@@ -163,13 +205,13 @@ def deactivate(gen, i):
         
         # db 데이터 바꾸기
         arr[i][5] = 1
-        updateData(gen, arr)
+        setData(gen, arr)
         
         return 0
     except:
         return 1
 
-def delete(gen, i):
+def delete(gen : int, i : int):
     """db_{gen}.pkl에서 i번 인덱스의 영상을 삭제 여부를 1로 바꿈
 
     Args:
@@ -187,7 +229,7 @@ def delete(gen, i):
         
         # db 데이터 바꾸기
         arr[i][6] = 1
-        updateData(gen, arr)
+        setData(gen, arr)
         
         return 0
     except:
