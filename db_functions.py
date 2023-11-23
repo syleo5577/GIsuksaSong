@@ -15,10 +15,8 @@ import time
 #   비활성화할 경우 노래가 재생되지는 않지만 비활성화됐다는 사실을 알 수 있음
 #   삭제할 경우 db에만 기록이 남으며 웹사이트에서는 확인할 수 없음
 
-# 기타 사항:
-
 def getData(gen : int, ban=False):
-    """db에서 데이터 가져옴
+    """db에서 데이터 호출
 
     Args:
         gen (int): generation
@@ -51,7 +49,7 @@ def getData(gen : int, ban=False):
         return arr
     
 def setData(gen : int, data : list, ban=False):
-    """받은 db 데이터 갱신
+    """db 데이터 갱신
     
     Args:
         gen (int): generation
@@ -75,11 +73,11 @@ def setData(gen : int, data : list, ban=False):
     return 0
 
 def setNextPlaylist(gen : int, i : int):
-    """set db_{gen}.pkl[-1][3] i
+    """db_{gen}.pkl[-1][3] (다음에 재생할 영상의 index)를 i로 바꿈 
 
     Args:
         gen (int): generation
-        i (int): Playlist index number of video to play next
+        i (int): playlist index number of video to play next
     """
     arr = getData(gen)
     arr[-1][3] = i
