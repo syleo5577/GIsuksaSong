@@ -17,7 +17,6 @@ def addHTTPS(url):
         return "https://" + url
     else:
         return url
-    
 
 def getYouTubeVideoID(url):
     """입력받은 URL이 'https://www.youtube.com/watch?v='로 시작하는지 확인 + 글자수 확인
@@ -29,21 +28,19 @@ def getYouTubeVideoID(url):
         url (str): 검사할 문자열
 
     Returns:
-        int: 유튜브 영상이면 유튜브 영상 코드, 아니면 '0'을 리턴
+        int: 유튜브 영상이면 유튜브 영상 코드, 아니면 None을 리턴
     """
     
-    yt_regex = re.compile(r'(https?://)?(www\.)?'
+    ytRegex = re.compile(r'(https?://)?(www\.)?'
         '(youtube|youtu|youtube-nocookie)\.(com|be)/'
         '(shorts/|watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})')
     
-    regex_match = yt_regex.search(url)
-    if regex_match:
-        return regex_match.group(6)
+    if regexMatch := ytRegex.match(url):
+        return regexMatch.group(6)
     else:
-        return "0"
+        return None
 
-
-def getLengthAndTitle(code):
+def getLengthAndTitle(code : str):
     """유튜브 영상 코드 넣으면 영상 시간, 제목 반환함
 
     Args:
@@ -72,7 +69,7 @@ def getLengthAndTitle(code):
 
     return strTimeToInt(length), title
 
-def strTimeToInt(length):
+def strTimeToInt(length : int):
     """유튜브 API에서 받은 시간 형식(PT{hh}H{mm}M{ss}S)을 초단위로 바꿔줌
 
     Args:
@@ -98,8 +95,8 @@ def strTimeToInt(length):
 if __name__ == "__main__":
     url = addHTTPS(input())
     code = getYouTubeVideoID(url)
-    if code == "0":
-        print("NOT YOUTUBE VIDEO")
-    else:
+    if code:
         print("code:", code)
         print(getLengthAndTitle(code))
+    else:
+        print("NOT YOUTUBE VIDEO")
