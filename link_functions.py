@@ -1,7 +1,7 @@
 from googleapiclient.discovery import build
 import re
 
-def addHTTPS(url):
+def addHTTPS(url : str):
     """입력받은 문자열에 https:// 없으면 넣어줌
 
     Args:
@@ -18,7 +18,7 @@ def addHTTPS(url):
     else:
         return url
 
-def getYouTubeVideoID(url):
+def getYouTubeVideoID(url : str):
     """입력받은 URL이 'https://www.youtube.com/watch?v='로 시작하는지 확인 + 글자수 확인
     즉, 유튜브 영상의 링크를 입력으로 받아야 1 출력
     (예: https://www.youtube.com을 입력받으면 0 출력) 
