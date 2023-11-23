@@ -41,14 +41,14 @@ def getData(gen : int, ban=False):
     if type(arr) == list:
         return arr
     else: # 리스트가 아니면 초기화하고 return
-        with open(path, "wb") as fr:
+        with open(path, "wb") as fw:
             if ban:
-                pickle.dump(arr := [0], fr)
+                pickle.dump(arr := [0], fw)
             else:
                 pickle.dump(arr := [[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fr)
         
         return arr
-    
+
 def setData(gen : int, data : list, ban=False):
     """db 데이터 갱신
     
@@ -109,15 +109,18 @@ def dbAppend(gen : int, code : str):
             return 4
         
         # 차단 여부 검사
-        if ban(code, isBan=False) == 2:
+        k = ban(gen, code, isBan=False)
+        if k == 2:
             return 3
+        elif k == 1:
+            return 1
         
         # 중복 검사
         st = arr[-1][3]
         ed = arr[-1][0]
         isDuplicated = False
         for i in range(st, ed):
-            if arr[i][1] == code:
+            if (arr[i][1] == code) and arr[i][6] == 0:
                 isDuplicated = True
                 break
             else:
@@ -127,17 +130,16 @@ def dbAppend(gen : int, code : str):
             return 2
         
         # (검사를 통과하면) db에 추가
-        ld = arr.pop()
-        while arr[ld[0]][3] == 1:
-            ld[0] += 1
-        arr.append([len(arr), code, title, lenth, (time.time()//1), 0, 0])
-        arr.append(ld)
+        lastIndex = arr.pop()
+        arr.append([len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0])
+        lastIndex[0] = len(arr)
+        arr.append(lastIndex)
         setData(gen, arr)
         
         return 0
     except:
         return 1
-    
+
 def ban(gen : int, code : str, isBan=True):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
 
@@ -200,12 +202,19 @@ def deactivate(gen : int, i : int):
             0: success
             1: runtime error
     """
+    
     try:
         # db 데이터 불러오기
         arr = getData(gen)
+        print(arr) #
         
         # db 데이터 바꾸기
         arr[i][5] = 1
+        
+        # 다음 재생(arr[-1][3]) 갱신
+        while ((arr[arr[-1][3]][5] == 1) or (arr[arr[-1][3]][6] == 1)) and (arr[-1][3] < arr[-1][0]): # 비활성화/삭제된 데이터 거름
+            arr[-1][3] += 1
+        
         setData(gen, arr)
         
         return 0
@@ -224,12 +233,18 @@ def delete(gen : int, i : int):
             0: success
             1: runtime error
     """
+    
     try:
         # db 데이터 불러오기
         arr = getData(gen)
         
         # db 데이터 바꾸기
         arr[i][6] = 1
+        
+        # 다음 재생(arr[-1][3]) 갱신
+        while ((arr[arr[-1][3]][5] == 1) or (arr[arr[-1][3]][6] == 1)) and (arr[-1][3] < arr[-1][0]): # 비활성화/삭제된 데이터 거름
+            arr[-1][3] += 1
+        
         setData(gen, arr)
         
         return 0
