@@ -15,6 +15,9 @@
 ### Version
     GisuksaSong early_before_pre_alpha 1
 
+## Xi story
+jona 어렵습니다
+
 ### Japdam
     이건 내가보려고만든거
 
