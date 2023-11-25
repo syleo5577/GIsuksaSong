@@ -132,8 +132,7 @@ def dbAppend(gen : int, code : str):
             4: timeout
     """
     
-    # try:
-    if True:
+    try:
         arr = getData(gen)
         
         # 시간 검사
@@ -170,8 +169,8 @@ def dbAppend(gen : int, code : str):
         setData(gen, arr)
         
         return 0
-    # except:
-    #     return 1
+    except:
+        return 1
 
 def ban(gen : int, code : str, isBan=True):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
@@ -188,8 +187,7 @@ def ban(gen : int, code : str, isBan=True):
             2: duplicated
     """
     
-    # try:
-    if True:
+    try:
         # db 데이터 불러오기
         banTree = getData(gen, ban=True)
         
@@ -218,8 +216,8 @@ def ban(gen : int, code : str, isBan=True):
         setData(gen, banTree, ban=True)
         
         return 0
-    # except:
-    #     return 1
+    except:
+        return 1
 
 def deactivate(gen : int, i : int):
     """db_{gen}.pkl에서 i번 인덱스의 비활성화 여부를 1로 바꿈
