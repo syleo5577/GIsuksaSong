@@ -45,7 +45,7 @@ def getData(gen : int, ban=False):
             if ban:
                 pickle.dump(arr := [0], fw)
             else:
-                pickle.dump(arr := [[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fr)
+                pickle.dump(arr := [[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fw)
         
         return arr
 
@@ -77,7 +77,7 @@ def getDataWithoutDeleted(gen : int):
                 newarr.append(arr[i])
     else: # 리스트가 아니면 초기화하고 return
         with open(path, "wb") as fw:
-            pickle.dump(arr := [[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fr)
+            pickle.dump(arr := [[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fw)
         
         return arr
 
@@ -100,8 +100,8 @@ def setData(gen : int, data : list, ban=False):
         path = f"./db/db_{gen}.pkl"
     
     # db 데이터 갱신
-    with open(path, "wb") as fr:
-        pickle.dump(data, fr)
+    with open(path, "wb") as fw:
+        pickle.dump(data, fw)
     
     return 0
 
