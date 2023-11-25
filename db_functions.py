@@ -132,7 +132,8 @@ def dbAppend(gen : int, code : str):
             4: timeout
     """
     
-    try:
+    # try:
+    if True:
         arr = getData(gen)
         
         # 시간 검사
@@ -169,8 +170,8 @@ def dbAppend(gen : int, code : str):
         setData(gen, arr)
         
         return 0
-    except:
-        return 1
+    # except:
+    #     return 1
 
 def ban(gen : int, code : str, isBan=True):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
@@ -187,29 +188,27 @@ def ban(gen : int, code : str, isBan=True):
             2: duplicated
     """
     
-    try:
+    # try:
+    if True:
         # db 데이터 불러오기
         banTree = getData(gen, ban=True)
         
         # 중복검사
         l = len(banTree)
-        if len(banTree) > 1:
-            i = 1
-            while True:
-                if i >= l:
-                    break
-                elif banTree[i] == 0:
-                    break
-                elif banTree[i] == code: # 중복된 경우
-                    return 2
-                else:
-                    i *= 2
-                    if code > banTree[i]:
-                        i += 1
-                    continue
-        else:
-            banTree = [0, code]
-            flag = False
+        i = 1
+        while True:
+            if i >= l:
+                break
+            elif banTree[i] == 0:
+                break
+            elif banTree[i] == code: # 중복된 경우
+                return 2
+            elif banTree[i] > code:
+                i = 2*i + 1
+            elif banTree[i] < code:
+                i = 2*i
+            else: # 정상적인 방법으로는else까지 올 수 없음
+                return 1
         
         if isBan: # b=False이면 밴 안함
             for _ in range(l, i+1):
@@ -219,8 +218,8 @@ def ban(gen : int, code : str, isBan=True):
         setData(gen, banTree, ban=True)
         
         return 0
-    except:
-        return 1
+    # except:
+    #     return 1
 
 def deactivate(gen : int, i : int):
     """db_{gen}.pkl에서 i번 인덱스의 비활성화 여부를 1로 바꿈
