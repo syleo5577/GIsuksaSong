@@ -18,17 +18,14 @@ def addHTTPS(url : str):
     else:
         return url
 
-def getYouTubeVideoID(url : str):
-    """입력받은 URL이 'https://www.youtube.com/watch?v='로 시작하는지 확인 + 글자수 확인
-    즉, 유튜브 영상의 링크를 입력으로 받아야 1 출력
-    (예: https://www.youtube.com을 입력받으면 0 출력) 
-    ! 이 함수는 입력받은 문자열이 URL인지 아닌지 검사하지 않음
+def getYoutubeVideoID(url : str):
+    """입력받은 URL에서 유튜브 영상 코드 추출
     
     Args:
         url (str): 검사할 문자열
 
     Returns:
-        int: 유튜브 영상이면 유튜브 영상 코드, 아니면 None을 리턴
+        str | None: 유튜브 영상이면 유튜브 영상 코드, 아니면 None을 리턴
     """
     
     ytRegex = re.compile(r'(https?://)?(www\.)?'
@@ -94,7 +91,7 @@ def strTimeToInt(length : int):
 
 if __name__ == "__main__":
     url = addHTTPS(input())
-    code = getYouTubeVideoID(url)
+    code = getYoutubeVideoID(url)
     if code:
         print("code:", code)
         print(getLengthAndTitle(code))
