@@ -59,7 +59,7 @@ def getDataWithoutDeleted(gen : int):
         list: DB data without deleted index
     """
 
-    path = f"./db/ban_{gen}.pkl"
+    path = f"./db/db_{gen}.pkl"
     
     try:
         with open(path, "rb") as fr:
@@ -67,19 +67,19 @@ def getDataWithoutDeleted(gen : int):
     except:
         arr = 0
     
-    # db 데이터 받은거 deleted(arr[n][6])=1인거 제외하고 return
-    newarr = []
-    st = arr[-1][-3]
-    ed = arr[-1][0]
+    # db 데이터 받은거 arr[n][6](삭제 여부)=0인거만 newarr에 넣음
     if type(arr) == list:
+        newarr = []
+        st = arr[-1][3]
+        ed = arr[-1][0]
         for i in range(st, ed):
             if arr[i][6] == 0:
                 newarr.append(arr[i])
-    else: # 리스트가 아니면 초기화하고 return
+    else: # 리스트가 아니면 초기화
         with open(path, "wb") as fw:
-            pickle.dump(arr := [[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fw)
+            pickle.dump(newarr := [[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fw)
         
-        return arr
+    return newarr
 
 def setData(gen : int, data : list, ban=False):
     """db 데이터 갱신
