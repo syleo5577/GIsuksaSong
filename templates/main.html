@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기숙사 노래 추천 v1.0.0</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    window.onload = function() {
+      var input = document.getElementById('youtubelink');
+      input.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') {
+          addsong();
+        }
+      });
+    }
+    
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><a hre="#">SSM</a></h1>
+      <div class="nav">
+        <ul>
+          <li><a href="#">|</a></li>
+          <li><button><a href="#">Login</a></button></li>
+        </ul>
+      </div>
+    </div>
+    <div class="hero">
+      <iframe width="800" height="415" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe>
+    </div>
+    <div class="box">
+      <h1>PLAYLIST</h1>
+    </div>
+    <div id="input">
+      <input type="text" id="youtubelink" placeholder="유튜브 링크 입력">
+    </div>
+  </div>
+</body>
+</html>

@@ -1,9 +1,17 @@
 from fastapi import FastAPI, Request
-from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import db_functions as db
 import link_functions as link
+
+
+app = FastAPI()
+app.mount("/D:\Code/vscode/GisuksaSong", StaticFiles(directory="Gisuksasong"), name="templates")
+
+templates = Jinja2Templates(directory="templates")
+
 
 class linkInput(BaseModel):
     url: str
@@ -11,9 +19,6 @@ class linkInput(BaseModel):
 class DataStorage(BaseModel):
     data: list[list]
 
-templates = Jinja2Templates(directory="templates")
-
-app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,7 +33,7 @@ app.add_middleware(
 
 @app.get("/main")
 async def root(request: Request):
-    return templates.TemplateResponse("test.html", {"request": request})
+    return templates.TemplateResponse("main.html", {"request": request})
 
 @app.get("/main/data")
 async def get_item():
