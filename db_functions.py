@@ -7,12 +7,10 @@ import time
 # db_{학년 기수}.pkl (학년 기수를 나타내는 변수는 generation, gen)
 
 # 메인 db 데이터 형식
-# {index} {str 영상 코드} {str 영상 제목} {int 영상 길이} {int 등록 (유닉스) 시간} {int 비활성화 여부} {int 삭제 여부} {int 추천수(미사용)} {int 비추천수(미사용)}
-# 마지막 index는 [ {index}, 'not_a_video', ' ', {다음에 재생될 영상의 index}, 0, 1, 1, 0, 0 ]
+# {index} {str 영상 코드} {str 영상 제목} {int 영상 길이} {int 등록 (유닉스) 시간} {int 다운로드 여부(deactivate)} {int 삭제 여부(deleted)} {int 추천수(미사용)} {int 비추천수(미사용)}
 
 # 기본적인 기획:
-#   db에는 영상 코드, 제목, 길이, 등록한 시간, 비활성화 여부, 삭제 여부가 기록됨
-#   비활성화할 경우 노래가 재생되지는 않지만 비활성화됐다는 사실을 알 수 있음
+#   db에는 영상 코드, 제목, 길이, 등록한 시간, 다운로드 여부, 삭제 여부가 기록됨
 #   삭제할 경우 db에만 기록이 남으며 웹사이트에서는 확인할 수 없음
 
 def getData(gen : int, ban=False):
@@ -59,25 +57,15 @@ def getDataWithoutDeleted(gen : int):
         list: DB data without deleted index
     """
 
-    path = f"./db/db_{gen}.pkl"
-    
-    try:
-        with open(path, "rb") as fr:
-            arr = pickle.load(fr)
-    except:
-        arr = 0
+    arr = getData(gen)
     
     # db 데이터 받은거 arr[n][6](삭제 여부)=0인거만 newarr에 넣음
-    if type(arr) == list:
-        newarr = []
-        st = arr[-1][3]
-        ed = arr[-1][0]
-        for i in range(st, ed):
-            if arr[i][6] == 0:
-                newarr.append(arr[i])
-    else: # 리스트가 아니면 초기화
-        with open(path, "wb") as fw:
-            pickle.dump(newarr := [[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fw)
+    newarr = []
+    st = arr[-1][3]
+    ed = arr[-1][0]
+    for i in range(st, ed):
+        if arr[i][6] == 0:
+            newarr.append(arr[i])
         
     return newarr
 
@@ -104,17 +92,6 @@ def setData(gen : int, data : list, ban=False):
         pickle.dump(data, fw)
     
     return 0
-
-def setNextPlaylist(gen : int, i : int):
-    """db_{gen}.pkl[-1][3] (다음에 재생할 영상의 index)를 i로 바꿈 
-
-    Args:
-        gen (int): generation
-        i (int): playlist index number of video to play next
-    """
-    arr = getData(gen)
-    arr[-1][3] = i
-    setData(gen, arr)
 
 def dbAppend(gen : int, code : str):
     """db에 영상 추가
@@ -144,15 +121,14 @@ def dbAppend(gen : int, code : str):
         k = ban(gen, code, isBan=False)
         if k == 2:
             return 3
-        elif k == 1:
+        elif k == 1: # ban 함수에서 오류 발생
             return 1
         
         # 중복 검사
-        st = arr[-1][3]
-        ed = arr[-1][0]
         isDuplicated = False
-        for i in range(st, ed):
-            if (arr[i][1] == code) and arr[i][6] == 0:
+        l = len(arr)
+        for i in range(l):
+            if (arr[i][1] == code) and (arr[i][5] == 0) and (arr[i][6] == 0):
                 isDuplicated = True
                 break
             else:
@@ -162,10 +138,7 @@ def dbAppend(gen : int, code : str):
             return 2
         
         # (검사를 통과하면) db에 추가
-        lastIndex = arr.pop()
         arr.append([len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0])
-        lastIndex[0] = len(arr)
-        arr.append(lastIndex)
         setData(gen, arr)
         
         return 0
@@ -189,31 +162,16 @@ def ban(gen : int, code : str, isBan=True):
     
     try:
         # db 데이터 불러오기
-        banTree = getData(gen, ban=True)
+        banDict = getData(gen, ban=True)
         
         # 중복검사
-        l = len(banTree)
-        i = 1
-        while True:
-            if i >= l:
-                break
-            elif banTree[i] == 0:
-                break
-            elif banTree[i] == code: # 중복된 경우
-                return 2
-            elif banTree[i] > code:
-                i = 2*i + 1
-            elif banTree[i] < code:
-                i = 2*i
-            else: # 정상적인 방법으로는else까지 올 수 없음
-                return 1
+        if code in banDict:
+            return 2
         
-        if isBan: # b=False이면 밴 안함
-            for _ in range(l, i+1):
-                banTree.append(0)
-            banTree[i] = code
-            
-        setData(gen, banTree, ban=True)
+        # db 업데이트
+        if isBan:
+            banDict[code] = 1
+            setData(gen, banDict, ban=True)
         
         return 0
     except:
@@ -235,15 +193,9 @@ def deactivate(gen : int, i : int):
     try:
         # db 데이터 불러오기
         arr = getData(gen)
-        print(arr) #
         
         # db 데이터 바꾸기
         arr[i][5] = 1
-        
-        # 다음 재생(arr[-1][3]) 갱신
-        while ((arr[arr[-1][3]][5] == 1) or (arr[arr[-1][3]][6] == 1)) and (arr[-1][3] < arr[-1][0]): # 비활성화/삭제된 데이터 거름
-            arr[-1][3] += 1
-        
         setData(gen, arr)
         
         return 0
@@ -269,11 +221,6 @@ def delete(gen : int, i : int):
         
         # db 데이터 바꾸기
         arr[i][6] = 1
-        
-        # 다음 재생(arr[-1][3]) 갱신
-        while ((arr[arr[-1][3]][5] == 1) or (arr[arr[-1][3]][6] == 1)) and (arr[-1][3] < arr[-1][0]): # 비활성화/삭제된 데이터 거름
-            arr[-1][3] += 1
-        
         setData(gen, arr)
         
         return 0
