@@ -237,9 +237,7 @@ def downloadVideo(gen : int, index : int):
         index (int): index number of video to download
 
     Returns:
-        int:
-            0: success
-            1: runtime error
+        str: downloaded file directory, if fail return ''
     """
     
     arr = getData(index)
@@ -267,9 +265,33 @@ def downloadVideo(gen : int, index : int):
         # print("다운로드 및 변환 완료!")
         # print(f"저장된 파일명: {mp3_file}")
         
+        return mp3_file
+    except:
+        return ""
+
+def deleteVideo(gen : int, index : int):
+    """videos_gen에서 파일 지움. index는 db_gen.pkl에서의 인덱스
+
+    Args:
+        gen (int): generation
+        index (int): index number of video to delete
+
+    Returns:
+        int:
+            0: succes
+            1: runtime error
+    """
+    
+    try:
+        arr = getData(index)
+        title = arr[index][2]
+        path = f"db/videos_{gen}/{title}.mp3"
+        
+        os.remove(path)
+        
         return 0
     except:
         return 1
-    
+
 if __name__ == "__main__":
     downloadVideo(0, 0)
