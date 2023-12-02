@@ -15,39 +15,22 @@ import time
 #   db에는 영상 코드, 제목, 길이, 등록한 시간, 다운로드 여부, 삭제 여부가 기록됨
 #   삭제할 경우 db에만 기록이 남으며 웹사이트에서는 확인할 수 없음
 
-def getData(gen : int, ban=False):
+def getData(gen : int):
     """db 데이터 호출
 
     Args:
         gen (int): generation
-        ban (bool, optional): is it ban_{gen}.pkl. Defaults to False.
 
     Returns:
         list: DB data
     """
     
-    if ban:
-        path = f"./db/ban_{gen}.pkl"
-    else:
-        path = f"./db/db_{gen}.pkl"
-    
-    try:
-        with open(path, "rb") as fr:
-            arr = pickle.load(fr)
-    except:
-        arr = 0
+    path = f"./db/db_{gen}.pkl"
+    with open(path, "rb") as fr:
+        arr : list[list] = pickle.load(fr)
     
     # db 데이터 받은거 return
-    if type(arr) == list:
-        return arr
-    else: # 리스트가 아니면 초기화하고 return
-        with open(path, "wb") as fw:
-            if ban:
-                pickle.dump(arr := [0], fw)
-            else:
-                pickle.dump(arr := [[0, 'not_a_video', ' ', 0, 0, 1, 1, 0, 0]], fw)
-        
-        return arr
+    return arr
 
 def getDataWithoutDeleted(gen : int):
     """db에서 삭제되지 않은 데이터 호출
@@ -71,23 +54,19 @@ def getDataWithoutDeleted(gen : int):
         
     return newarr
 
-def setData(gen : int, data : list, ban=False):
+def setData(gen : int, data : list):
     """db 데이터 갱신
     
     Args:
         gen (int): generation
         data (anything): updated db data
-        ban (bool, optional): is ban DB. Defaults to False.
 
     Returns:
         int: 0
     """
     
     # 경로 설정
-    if ban:
-        path = f"./db/ban_{gen}.pkl"
-    else:
-        path = f"./db/db_{gen}.pkl"
+    path = f"./db/db_{gen}.pkl"
     
     # db 데이터 갱신
     with open(path, "wb") as fw:
@@ -103,12 +82,7 @@ def dbAppend(gen : int, code : str):
         code (str): youtube video code
 
     Returns:
-        int: 
-            0: success
-            1: runtime error
-            2: duplicated
-            3: banned
-            4: timeout
+        str: 작동 성공/실패 여부
     """
     
     try:
@@ -117,14 +91,13 @@ def dbAppend(gen : int, code : str):
         # 시간 검사
         lenth, title = link_functions.getLengthAndTitle(code)
         if lenth > 600: # 10분 넘어가는 영상 거름
-            return 4
+            return "timeout"
         
         # 차단 여부 검사
-        k = ban(gen, code, isBan=False)
-        if k == 2:
-            return 3
-        elif k == 1: # ban 함수에서 오류 발생
-            return 1
+        with open(f"db/ban_{gen}.pkl", "rb") as fr:
+            banDict = pickle.load(fr)
+        if code in banDict:
+            return "banned"
         
         # 중복 검사
         isDuplicated = False
@@ -137,23 +110,22 @@ def dbAppend(gen : int, code : str):
                 continue
         
         if isDuplicated:
-            return 2
+            return "duplicated"
         
         # (검사를 통과하면) db에 추가
         arr.append([len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0])
         setData(gen, arr)
         
-        return 0
+        return "success"
     except:
-        return 1
+        return "runtime error"
 
-def ban(gen : int, code : str, isBan=True):
+def ban(gen : int, code : str):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
 
     Args:
         gen (int): generation
         code (str): youtube video code
-        b (bool, optional): actual ban or not. Defaults to True.
 
     Returns:
         int:
@@ -164,16 +136,17 @@ def ban(gen : int, code : str, isBan=True):
     
     try:
         # db 데이터 불러오기
-        banDict = getData(gen, ban=True)
+        path = f"db/ban_{gen}.pkl"
+        with open(path, "rb") as fr:
+            banDict = pickle.load(fr)
         
         # 중복검사
         if code in banDict:
             return 2
         
         # db 업데이트
-        if isBan:
-            banDict[code] = 1
-            setData(gen, banDict, ban=True)
+        with open(path, "wb") as fw:
+            pickle.dump(banDict, fw)
         
         return 0
     except:
@@ -230,47 +203,49 @@ def delete(gen : int, i : int):
         return 1
 
 def downloadVideo(gen : int, index : int):
-    """db_gen.pkl에서 index번째 인덱스에 있는 영상 다운로드
+    """db_gen.pkl에서 index번째 인덱스에 있는 영상 다운로드. 이미 있으면 다운로드 안함
 
     Args:
         gen (int): generation
         index (int): index number of video to download
 
     Returns:
-        str: downloaded file directory, if fail return ''
+        str: dir path of downloaded file, if fail return 'error'
     """
     
-    arr = getData(index)
-    code = arr[index][1]
-    title = arr[index][2]
-    
     try:
+        # 데이터 호출
+        arr = getData(gen)
+        title = arr[index][2]
+        code = arr[index][1]
+        
+        # 파일 존재 여부 확인
+        mp4_file = f"db/videos/{title}.mp4"
+        mp3_file = f"db/audio/{title}.mp3"
+        if os.path.isfile(mp3_file):
+            return mp3_file
+    
         # 유튜브 영상 다운로드
         url = f"https://youtube.com/watch?v={code}"
         yt = YouTube(url)
         video = yt.streams.filter(only_audio=True).first()
-        video.download(output_path=f'db/videos_{gen}')
+        video.download(output_path=f'db/video')
 
         # 다운로드한 영상을 mp3로 변환
-        mp4_file = f"db/videos_{gen}/{title}.mp4"
-        mp3_file = f"db/videos_{gen}/{title}.mp3"
-
         clip = mp.AudioFileClip(mp4_file)
         clip.write_audiofile(mp3_file)
 
         # 변환 후 mp4 파일 삭제
         clip.close()
         os.remove(mp4_file)
-
-        # print("다운로드 및 변환 완료!")
-        # print(f"저장된 파일명: {mp3_file}")
         
         return mp3_file
     except:
-        return ""
+        return "runtime error"
 
 def deleteVideo(gen : int, index : int):
-    """videos_gen에서 파일 지움. index는 db_gen.pkl에서의 인덱스
+    """**DO NOT USE**
+    db/videos에서 파일 지움. index는 db_gen.pkl에서의 인덱스
 
     Args:
         gen (int): generation
@@ -278,14 +253,14 @@ def deleteVideo(gen : int, index : int):
 
     Returns:
         int:
-            0: succes
+            0: success
             1: runtime error
     """
     
     try:
-        arr = getData(index)
+        arr = getData(gen)
         title = arr[index][2]
-        path = f"db/videos_{gen}/{title}.mp3"
+        path = f"db/videos/{title}.mp3"
         
         os.remove(path)
         
