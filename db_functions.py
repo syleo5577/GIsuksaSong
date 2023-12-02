@@ -1,6 +1,8 @@
-from datetime import datetime
 import link_functions
+import moviepy.editor as mp
+import os
 import pickle
+from pytube import YouTube
 import time
 
 # 메인 db 이름 형식
@@ -227,5 +229,47 @@ def delete(gen : int, i : int):
     except:
         return 1
 
+def downloadVideo(gen : int, index : int):
+    """db_gen.pkl에서 index번째 인덱스에 있는 영상 다운로드
+
+    Args:
+        gen (int): generation
+        index (int): index number of video to download
+
+    Returns:
+        int:
+            0: success
+            1: runtime error
+    """
+    
+    arr = getData(index)
+    code = arr[index][1]
+    title = arr[index][2]
+    
+    try:
+        # 유튜브 영상 다운로드
+        url = f"https://youtube.com/watch?v={code}"
+        yt = YouTube(url)
+        video = yt.streams.filter(only_audio=True).first()
+        video.download(output_path=f'db/videos_{gen}')
+
+        # 다운로드한 영상을 mp3로 변환
+        mp4_file = f"db/videos_{gen}/{title}.mp4"
+        mp3_file = f"db/videos_{gen}/{title}.mp3"
+
+        clip = mp.AudioFileClip(mp4_file)
+        clip.write_audiofile(mp3_file)
+
+        # 변환 후 mp4 파일 삭제
+        clip.close()
+        os.remove(mp4_file)
+
+        # print("다운로드 및 변환 완료!")
+        # print(f"저장된 파일명: {mp3_file}")
+        
+        return 0
+    except:
+        return 1
+    
 if __name__ == "__main__":
-    pass
+    downloadVideo(0, 0)
