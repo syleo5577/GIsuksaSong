@@ -68,6 +68,9 @@
   padding-top: 25px; /* 상단으로부터의 간격 */
   border-radius:50px;
   color: white;
+}
+
+#title {
   font-family: abster;
 }
 
@@ -90,6 +93,7 @@ margin-top: 10px;
 .text-container {
   width: 50%;
   margin-top: 10px;
+  margin-left: 10px;
 }
 
 .upper-text-eliment {
@@ -117,18 +121,26 @@ margin-top: 10px;
   margin: 5px;
   text-align: center;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
   color: #fff;
   border-radius: 50px;
   transition-duration: 0.4s;
   cursor: pointer;
 }
 
-.button1 {
+.button-download {
   background-color: #4CAF50; 
 }
 
-.button2 {
+.button-deactivate {
+  background-color: black;
+}
+
+.button-delete {
+  background-color: #f44336;
+}
+
+.button-ban {
   background-color: #f44336;
 }
 
@@ -138,12 +150,13 @@ input{
   width: 40%;
   left: 30%;
   background:white;
-  height: 20px;
+  height: 30px;
   padding: 10px;
   border-top-right-radius: 25px;
   border-bottom-left-radius: 25px;
   border-radius: 20px;
   background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7));
+  font-size: 20px;
 }
 
 #playlist {
