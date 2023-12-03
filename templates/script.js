@@ -59,13 +59,17 @@ function addItemToList(upperText, lowerText, imageUrl, index) {
     buttonsLi.classList.add('buttons-li');
 
     // buttons
-    textNodeArr = ['좋아요', '싫어요', 3, 4];
-    for (var i = 0; i < 2; i++){
+    textNodeArr = ['다운로드', '비활성화', '삭제', '차단'];
+    for (var i = 0; i < 4; i++){
         let button = document.createElement('button');
         button.classList.add('round-button');
         button.classList.add('button' + (i+1));
         button.id = 'button' + (i+1) + '-' + index;
         button.appendChild(document.createTextNode(textNodeArr[i]));
+
+        button.addEventListener('click', function() {
+            console.log(this.id + ' 클릭됨');
+        });
 
         buttonsLi.appendChild(button);
         buttonsUl.appendChild(buttonsLi);
@@ -109,8 +113,7 @@ async function getData() {
 }
 
 async function postLink(e) {
-    let input = document.getElementById('linkInput');
-    let inputValue = input.value;
+    let inputValue = document.getElementById('linkInput').value;
     if (e.keyCode == 13){
         e.preventDefault();
         
@@ -130,8 +133,11 @@ async function postLink(e) {
             const jsonData = await response.json();
             console.log(jsonData);
 
-            input = null;
-            fillList
+            let input = document.querySelector('#linkInput');
+            input = '';
+
+            resetList();
+            fillList();
             
             return jsonData;
         } catch (error) {
@@ -149,7 +155,6 @@ async function postLink(e) {
 function Unix_timestamp(t){
     const date = new Date(t*1000);
 
-    // 원하는 날짜 및 시간 형식으로 변환하기
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     const day = date.getDate();
@@ -157,23 +162,30 @@ function Unix_timestamp(t){
     const minutes = date.getMinutes();
     const seconds = date.getSeconds();
 
-    return `${year}-${String(month).padStart(2, "0")}-${day} ${hours}:${minutes}:${seconds}`;
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")} ${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 /**
- * 
+ * 리스트 채움
  * @returns 0
  */
-async function fillList(){
+async function fillList() {
     let playlistArr = await getData();
     let playlistLength = playlistArr.length;
     for (let i = 0; i < playlistLength; i++) {
         let index, code, title, videoLength, uploadTime, isDeactivated, isDeleted, likes, dislikes;
         [index, code, title, videoLength, uploadTime, isDeactivated, isDeleted, likes, dislikes] = playlistArr[i];
-        addItemToList(title, Unix_timestamp(uploadTime), `https://i.ytimg.com/vi/${code}/hq720.jpg`, index);
+        addItemToList(title, Unix_timestamp(uploadTime), `https://i.ytimg.com/vi/${code}/default.jpg`, index);
     }
 
     return 0
+}
+
+async function resetList() {
+    let ulElement = document.querySelector('#playlist');
+    ulElement.innerHTML = '';
+
+    return 0;
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
