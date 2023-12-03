@@ -21,9 +21,6 @@ app.add_middleware(
 )
 
 
-# templates = Jinja2Templates(directory="templates")
-
-
 class linkInput(BaseModel):
     url: str
 
@@ -35,10 +32,6 @@ class DataStorage(BaseModel):
 async def blank():
     return "Hello, world!"
 
-# @app.get("/list")
-# async def root(request: Request):
-    # return templates.TemplateResponse("main.html", {"request": request})
-
 @app.get("/list")
 async def root():
     return FileResponse("templates/main.html")
@@ -47,7 +40,7 @@ async def root():
 async def getData(gen : int):
     print("asdf")
     data = db.getDataWithoutDeleted(gen)
-    return {"arr": data}  # 저장된 데이터 반환
+    return {"arr": data} 
 
 @app.get("/list/download")
 async def getVideo(gen : int, index : int, code : str):
@@ -66,33 +59,27 @@ async def deactivateItem(gen : int, index : int):
         return {"result": "success"}
     else:
         return {"result": "runtime error"}
-    # print("deactivate:", gen, index)
-    # return {"messege": "deactivate"}
 
 @app.get("/list/delete")
 async def deleteItem(gen : int, index : int):
-    # r = db.delete(gen, index)
-    # if r == 0:
-    #     return {"result": "success"}
-    # else:
-    #     return {"result": "runtime error"}
-    print("delete:", gen, index)
-    return {"messege": "delete"}
+    r = db.delete(gen, index)
+    if r == 0:
+        return {"result": "success"}
+    else:
+        return {"result": "runtime error"}
 
 @app.get("/list/ban")
 async def deleteItem(gen : int, index : int):
-    # arr = db.getData(gen)
-    # code = arr[index][2]
+    arr = db.getData(gen)
+    code = arr[index][2]
     
-    # r = db.ban(gen, code)
-    # if r == 0:
-    #     return {"result": "success"}
-    # elif r == 2:
-    #     return {"result": "duplicated"}
-    # else:
-    #     return {"result": "runtime error"}
-    print("ban:", gen, index)
-    return {"messege": "ban"}
+    r = db.ban(gen, code)
+    if r == 0:
+        return {"result": "success"}
+    elif r == 2:
+        return {"result": "duplicated"}
+    else:
+        return {"result": "runtime error"}
 
 @app.post("/list")
 async def post_url(gen : int, item : linkInput):
