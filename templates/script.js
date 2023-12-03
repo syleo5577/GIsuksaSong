@@ -5,13 +5,13 @@ let generation = searchParams.get("gen");
 
 
 /**
- * 플레이리스트 채우는 함수. int는 db에서의 인덱스 말하는거임.
- * @param {string} lowerText 
- * @param {string} upperText 
- * @param {string} imageUrl 
- * @param {int} index 
+ * 플레이리스트 채우는 함수. int는 
+ * @param {string} lowerText 윗부분 텍스트(영상 제목)
+ * @param {string} upperText 아랫부분 텍스트(영상 등록 일시)
+ * @param {string} code 영상 코드
+ * @param {int} index db에서의 인덱스
  */
-function addItemToList(upperText, lowerText, imageUrl, index) {
+function addItemToList(upperText, lowerText, code, index) {
     // itemContainer
     let itemContainer = document.createElement('div');
     itemContainer.classList.add('playlist-item');
@@ -25,7 +25,7 @@ function addItemToList(upperText, lowerText, imageUrl, index) {
     
     // thumbnail
     let thumbnail = new Image();
-    thumbnail.src = imageUrl; // 이미지 경로를 실제 이미지 경로로 대체
+    thumbnail.src = `https://i.ytimg.com/vi/${code}/default.jpg`; // 썸네일 이미지 링크
     thumbnailContainer.appendChild(thumbnail);
     
 
@@ -59,16 +59,33 @@ function addItemToList(upperText, lowerText, imageUrl, index) {
     buttonsLi.classList.add('buttons-li');
 
     // buttons
-    textNodeArr = ['다운로드', '비활성화', '삭제', '차단'];
+    let nameOfTextNodes = ['다운로드', '비활성화', '삭제', '차단'];
+    let nameOfCssClassAndId = ['download', 'deactivate', 'delete', 'ban'];
     for (var i = 0; i < 4; i++){
         let button = document.createElement('button');
         button.classList.add('round-button');
-        button.classList.add('button' + (i+1));
-        button.id = 'button' + (i+1) + '-' + index;
-        button.appendChild(document.createTextNode(textNodeArr[i]));
+        button.classList.add('button-' + nameOfCssClassAndId[i]);
+        button.id = 'button-' + nameOfCssClassAndId[i] + '-' + index + '-' + code;
+        button.appendChild(document.createTextNode(nameOfTextNodes[i]));
 
         button.addEventListener('click', function() {
             console.log(this.id + ' 클릭됨');
+            var dummy;
+            let kindOfButton, indexOfButton;
+            [dummy, kindOfButton, indexOfButton] = thid.id.split('-')
+
+            if (kindOfButton == 'download') {
+
+            } else if (kindOfButton == 'deactivate') {
+
+            } else if (kindOfButton == 'delete') {
+
+            } else if (kindOfButton == 'ban') {
+
+            } else {
+                window.alert("오류발생")
+            }
+            
         });
 
         buttonsLi.appendChild(button);
@@ -112,6 +129,71 @@ async function getData() {
     return playlistArr;
 }
 
+async function getVideo(code) {
+    let playlistArr;
+
+    try {
+        let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
+        let data = await response.json();
+        playlistArr = data.arr;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+
+    console.log(playlistArr);
+    return playlistArr;
+}
+
+async function deactivateItem() {
+    let playlistArr;
+
+    try {
+        let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
+        let data = await response.json();
+        playlistArr = data.arr;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+
+    console.log(playlistArr);
+    return playlistArr;
+}
+
+async function deleteItem() {
+    let playlistArr;
+
+    try {
+        let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
+        let data = await response.json();
+        playlistArr = data.arr;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+
+    console.log(playlistArr);
+    return playlistArr;
+}
+
+async function banItem() {
+    let playlistArr;
+
+    try {
+        let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
+        let data = await response.json();
+        playlistArr = data.arr;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+
+    console.log(playlistArr);
+    return playlistArr;
+}
+
+/**
+ * input에 입력한 링크 서버로 보냄
+ * @param {Event} e 
+ * @returns json
+ */
 async function postLink(e) {
     let inputValue = document.getElementById('linkInput').value;
     if (e.keyCode == 13){
@@ -133,11 +215,15 @@ async function postLink(e) {
             const jsonData = await response.json();
             console.log(jsonData);
 
-            let input = document.querySelector('#linkInput');
-            input = '';
+            let result = jsonData.result;
+            if (result = "success") {
+                window.alert("정상적으로 등록되었습니다.");
+                addItemToList(jsonData.title, Unix_timestamp(jsonData.unixtime), jsonData.code, jsonData.index)
 
-            resetList();
-            fillList();
+                let input = document.querySelector('#linkInput');
+                input.value = '';
+            }
+
             
             return jsonData;
         } catch (error) {
@@ -148,7 +234,7 @@ async function postLink(e) {
 
 
 /**
- * 
+ * 유닉스 시간 바꿔줌
  * @param {float | int} t 
  * @returns yyyy-mm-
  */
@@ -166,16 +252,17 @@ function Unix_timestamp(t){
 }
 
 /**
- * 리스트 채움
+ * 리스트 채우기
  * @returns 0
  */
 async function fillList() {
     let playlistArr = await getData();
     let playlistLength = playlistArr.length;
+
     for (let i = 0; i < playlistLength; i++) {
         let index, code, title, videoLength, uploadTime, isDeactivated, isDeleted, likes, dislikes;
         [index, code, title, videoLength, uploadTime, isDeactivated, isDeleted, likes, dislikes] = playlistArr[i];
-        addItemToList(title, Unix_timestamp(uploadTime), `https://i.ytimg.com/vi/${code}/default.jpg`, index);
+        addItemToList(title, Unix_timestamp(uploadTime), code, index);
     }
 
     return 0
