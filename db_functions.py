@@ -219,8 +219,8 @@ def downloadVideo(gen : int, index : int):
         code = arr[index][1]
         
         # 파일 존재 여부 확인
-        mp4_file = f"db/videos/{title}.mp4"
-        mp3_file = f"db/audio/{title}.mp3"
+        mp4_file = f"db/videos/{code}.mp4"
+        mp3_file = f"db/audio/{code}.mp3"
         if os.path.isfile(mp3_file):
             return mp3_file
     
@@ -228,7 +228,7 @@ def downloadVideo(gen : int, index : int):
         url = f"https://youtube.com/watch?v={code}"
         yt = YouTube(url)
         video = yt.streams.filter(only_audio=True).first()
-        video.download(output_path=f'db/video')
+        video.download(output_path=f'db/video', filename=code)
 
         # 다운로드한 영상을 mp3로 변환
         clip = mp.AudioFileClip(mp4_file)
@@ -268,6 +268,6 @@ def deleteVideo(gen : int, index : int):
         return 1
 
 if __name__ == "__main__":
-    # setData(0, [[0, 'zRyD8zMk6Ao', '내 다리 부술라고!!! [ 폴리브릿지3 ] 21부', 541, 1700912312, 0, 0, 0, 0]])
+    # setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
     arr = getData(0)
     print(arr)
