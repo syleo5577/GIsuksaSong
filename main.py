@@ -44,26 +44,30 @@ async def root():
     return FileResponse("templates/main.html")
 
 @app.get("/list/data")
-async def get_item(gen : int):
+async def getData(gen : int):
     print("asdf")
     data = db.getDataWithoutDeleted(gen)
     return {"arr": data}  # 저장된 데이터 반환
 
-@app.get("/list/audio")
-async def get_audio(gen : int, index : int):
-    path = await db.downloadVideo(gen, index)
-    db.deactivate(gen, index)
-    return FileResponse(path, filename=f"{os.path.basename(path)}")
+@app.get("/list/download")
+async def getVideo(gen : int, index : int, code : str):
+    dir = await db.downloadVideo(code)
+    if os.path.isfile(dir):
+        db.deactivate(gen, index)
+        return FileResponse(dir)
+    else:
+        return {"error": dir}
+        
 
 @app.get("/list/deactivate")
-async def deleteItem(gen : int, index : int):
-    # r = db.deactivate(gen, index)
-    # if r == 0:
-    #     return {"result": "success"}
-    # else:
-    #     return {"result": "runtime error"}
-    print("deactivate:", gen, index)
-    return {"messege": "deactivate"}
+async def deactivateItem(gen : int, index : int):
+    r = db.deactivate(gen, index)
+    if r == 0:
+        return {"result": "success"}
+    else:
+        return {"result": "runtime error"}
+    # print("deactivate:", gen, index)
+    # return {"messege": "deactivate"}
 
 @app.get("/list/delete")
 async def deleteItem(gen : int, index : int):
@@ -100,10 +104,10 @@ async def post_url(gen : int, item : linkInput):
     # print(code)
     if code:
         print("code:", code)
-        r = db.dbAppend(gen, code)
+        r, appendVideoData = db.dbAppend(gen, code)
+        if r == "success":
+            return {"result": r, "index": appendVideoData[0], "code": appendVideoData[1], "title": appendVideoData[2], "unixtime":appendVideoData[4]}
         return {"result": r}
     else:
         print("NOT YOUTUBE VIDEO")
-        return {"result": "not youtube video"}
-    # print(item)
-    # return {"messege": "asdf"}
+        return {"result": "not_video"}
