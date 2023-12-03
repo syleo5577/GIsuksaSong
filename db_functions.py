@@ -81,7 +81,7 @@ def dbAppend(gen : int, code : str):
         code (str): youtube video code
 
     Returns:
-        str: 작동 성공/실패 여부
+        str: 작동 성공/실패 여부. 등록 성공시 영상 정보도 함께 보냄.
     """
     
     try:
@@ -90,13 +90,13 @@ def dbAppend(gen : int, code : str):
         # 시간 검사
         lenth, title = link_functions.getLengthAndTitle(code)
         if lenth > 600: # 10분 넘어가는 영상 거름
-            return "timeout"
+            return "timeout", 4
         
         # 차단 여부 검사
         with open(f"db/ban_{gen}.pkl", "rb") as fr:
             banDict = pickle.load(fr)
         if code in banDict:
-            return "banned"
+            return "banned", 3
         
         # 중복 검사
         isDuplicated = False
@@ -109,15 +109,15 @@ def dbAppend(gen : int, code : str):
                 continue
         
         if isDuplicated:
-            return "duplicated"
+            return "duplicated", 2
         
         # (검사를 통과하면) db에 추가
         arr.append([len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0])
         setData(gen, arr)
         
-        return "success"
+        return "success", [len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0]
     except:
-        return "runtime error"
+        return "runtime error", 1
 
 def ban(gen : int, code : str):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
@@ -201,8 +201,8 @@ def delete(gen : int, i : int):
     except:
         return 1
 
-def downloadVideo(gen : int, index : int):
-    """db_gen.pkl에서 index번째 인덱스에 있는 영상 다운로드. 이미 있으면 다운로드 안함
+def downloadVideo(code : str):
+    """유튜브의 code 영상 다운로드. 이미 있으면 다운로드 안함
 
     Args:
         gen (int): generation
@@ -213,11 +213,6 @@ def downloadVideo(gen : int, index : int):
     """
     
     try:
-        # 데이터 호출
-        arr = getData(gen)
-        title = arr[index][2]
-        code = arr[index][1]
-        
         # 파일 존재 여부 확인
         mp4_file = f"db/videos/{code}.mp4"
         mp3_file = f"db/audio/{code}.mp3"
