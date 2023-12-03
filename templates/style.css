@@ -2,6 +2,7 @@
   font-family: abster;
   src: url(font/abster-webfont.woff) format('woff');
 }
+
 *{
   margin: 0;
   padding: 0;
@@ -46,25 +47,21 @@
   color: white;
 }
 
-.container .nav ul li a:hover{
-  color: #1fdfdf
-}
 
-.hero{
-  margin-top:10%;
-  margin-left:15%;
-}
+
+
 
 .box {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  right: 8%;
-  width: 300px;
-  height: 60%;
+  left: 10%;
+  top: 55%;
+  width: 80%;
+  height: 80%;
   border: 1px solid white;
   background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5));
-  text-align: center; /* 텍스트를 가운데 정렬 */
+  text-align: center; /* 텍스트 가운데 정렬 */
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -74,10 +71,71 @@
   font-family: abster;
 }
 
+.item-flex-container {
+display: flex;
+justify-content: space-between;
+}
+
+.thumbnail-container img {
+width: 120px;
+height: 67px;
+object-fit: cover;
+border-radius: 5px;
+float: left;
+margin-left: 20px;
+margin-bottom: 10px;
+margin-top: 10px;
+}
+
+.text-container {
+  width: 50%;
+  margin-top: 10px;
+}
+
+.upper-text-eliment {
+  text-align: left;
+  margin-top: 10px;
+  font-size: 20px;
+}
+
+.lower-text-eliment {
+  text-align: left;
+  margin-top: 10px;
+  font-style: italic;
+  font-size: 16px;
+}
+
+.buttons-ul {
+  list-style: none;
+  margin-top: 10px;
+}
+
+.round-button {
+  display: inline-block;
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: #fff;
+  border-radius: 50px;
+  transition-duration: 0.4s;
+  cursor: pointer;
+}
+
+.button1 {
+  background-color: #4CAF50; 
+}
+
+.button2 {
+  background-color: #f44336;
+}
+
 input{
   position:absolute;
   padding-top: 10px;
-  width: 340px;
+  width: 40%;
   left: 30%;
   background:white;
   height: 20px;
@@ -86,4 +144,9 @@ input{
   border-bottom-left-radius: 25px;
   border-radius: 20px;
   background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7));
+}
+
+#playlist {
+max-height: 600px;  
+overflow-y: auto; 
 }
