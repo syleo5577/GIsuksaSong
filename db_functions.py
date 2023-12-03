@@ -46,10 +46,9 @@ def getDataWithoutDeleted(gen : int):
     
     # db 데이터 받은거 arr[n][6](삭제 여부)=0인거만 newarr에 넣음
     newarr = []
-    st = arr[-1][3]
-    ed = arr[-1][0]
-    for i in range(st, ed):
-        if arr[i][6] == 0:
+    l = len(arr)
+    for i in range(l):
+        if arr[i][5] == 0 and arr[i][6] == 0:
             newarr.append(arr[i])
         
     return newarr
@@ -269,4 +268,6 @@ def deleteVideo(gen : int, index : int):
         return 1
 
 if __name__ == "__main__":
-    downloadVideo(0, 0)
+    # setData(0, [[0, 'zRyD8zMk6Ao', '내 다리 부술라고!!! [ 폴리브릿지3 ] 21부', 541, 1700912312, 0, 0, 0, 0]])
+    arr = getData(0)
+    print(arr)
