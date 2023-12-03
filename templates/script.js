@@ -66,9 +66,11 @@ function addItemToList(upperText, lowerText, code, index, isStrikthrough=0) {
     buttonsLi.classList.add('buttons-li');
 
     // buttons
-    let nameOfTextNodes = ['다운로드', '비활성화', '삭제', '차단'];
-    let nameOfCssClassAndId = ['download', 'deactivate', 'delete', 'ban'];
-    for (var i = 0; i < 4; i++){
+    // let nameOfTextNodes = ['다운로드', '비활성화', '삭제', '차단'];
+    // let nameOfCssClassAndId = ['download', 'deactivate', 'delete', 'ban'];
+    let nameOfTextNodes = ['다운로드', '삭제', '차단'];
+    let nameOfCssClassAndId = ['download', 'delete', 'ban'];
+    for (var i = 0; i < 3; i++){
         let button = document.createElement('button');
         button.classList.add('round-button');
         button.classList.add('button-' + nameOfCssClassAndId[i]);
@@ -82,13 +84,28 @@ function addItemToList(upperText, lowerText, code, index, isStrikthrough=0) {
             [dummy, kindOfButton, dbIndexOfButton, codeOfButton] = this.id.split('.');
 
             if (kindOfButton == 'download') {
-                getVideo(dbIndexOfButton, codeOfButton);
-            } else if (kindOfButton == 'deactivate') {
-                deactivateItem(dbIndexOfButton);
+                var res = getVideo(dbIndexOfButton, codeOfButton);
+                if (res == 1) {
+                    window.alert('다운로드 실패')
+                }
+            // } else if (kindOfButton == 'deactivate') {
+            //     var res = deactivateItem(dbIndexOfButton);
+            //     if (res == 1) {
+            //         window.alert('비활성화 실패')
+            //     }
             } else if (kindOfButton == 'delete') {
-
+                var res = deleteItem(dbIndexOfButton);
+                if (res == 1) {
+                    window.alert('삭제 실패')
+                }
             } else if (kindOfButton == 'ban') {
-
+                var res = banItem(dbIndexOfButton, codeOfButton);
+                if (res == 1) {
+                    window.alert('차단 실패')
+                }
+                if (res == 2) {
+                    window.alert('이미 차단되었습니다')
+                }
             } else {
                 window.alert("오류발생")
             }
@@ -141,6 +158,7 @@ async function getVideo(index, code) {
 
         if (!response.ok) {
             console.error('Server response was not ok.', response);
+
             return 1;
         }
 
@@ -152,13 +170,14 @@ async function getVideo(index, code) {
         a.click()
     } catch (error) {
         console.error('Error:', error);
+
+        return 1;
     }
 
     return 0;
 }
 
 async function deactivateItem(index) {
-    let data;
     try {
         let response = await fetch(`/list/deactivate?gen=${generation}&index=${index}`, { method: 'GET' });
         
@@ -167,7 +186,7 @@ async function deactivateItem(index) {
             return 1;
         }
 
-        data = await response.json();
+        let data = await response.json();
 
         if (data.result == 'success') {
             return 0;
@@ -180,16 +199,17 @@ async function deactivateItem(index) {
 }
 
 async function deleteItem(index) {
-    let data;
     try {
         let response = await fetch(`/list/delete?gen=${generation}&index=${index}`, { method: 'GET' });
-        
+        // console.log(response);
+
         if (!response.ok) {
             console.error('Server response was not ok.', response);
+
             return 1;
         }
 
-        data = await response.json();
+        let data = await response.json();
 
         if (data.result == 'success') {
             return 0;
@@ -201,24 +221,37 @@ async function deleteItem(index) {
     }
 }
 
-//     console.log(playlistArr);
-//     return playlistArr;
-// }
+async function banItem(index, code) {
+    var res = deleteItem(index);
+    if (res == 1) {
+        return 1;
+    }
 
-// async function banItem() {
-//     let playlistArr;
+    let response;
+    try {
+        response = await fetch(`/list/ban?gen=${generation}&index=${index}&code=${code}`, { method: 'GET' });
+        
+        if  (!response.ok) {
+            console.error('Server response was not ok.', response);
+            
+            return 1;
+        }
+        
+        let data = await response.json();
 
-//     try {
-//         let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
-//         let data = await response.json();
-//         playlistArr = data.arr;
-//     } catch (error) {
-//         console.error('Error:', error);
-//     }
+        if (data.result == 'success') {
+            return 0;
+        } else if (data.result == 'duplicated') {
+            return 2;
+        } else {
+            return 1;
+        }
+    } catch (error) {
+        console.error('Error:', error);
 
-//     console.log(playlistArr);
-//     return playlistArr;
-// }
+        return 1;
+    }
+}
 
 /**
  * input에 입력한 링크 서버로 보냄
