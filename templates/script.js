@@ -3,7 +3,6 @@ let searchParams = new URLSearchParams(currentURL.search);
 let generation = searchParams.get("gen");
 
 
-
 /**
  * 플레이리스트 채우는 함수. int는 
  * @param {string} lowerText 윗부분 텍스트(영상 제목)
@@ -12,7 +11,7 @@ let generation = searchParams.get("gen");
  * @param {int} index db에서의 인덱스
  * @param {int} [isStrikthrough=false] 취소선 여부
  */
-function addItemToList(upperText, lowerText, code, index, isStrikthrough=0) {
+async function addItemToList(upperText, lowerText, code, index, isStrikthrough=0, indexToInsert=-1) {
     // itemContainer
     let itemContainer = document.createElement('div');
     itemContainer.classList.add('playlist-item');
@@ -77,17 +76,35 @@ function addItemToList(upperText, lowerText, code, index, isStrikthrough=0) {
         button.id = 'button.' + nameOfCssClassAndId[i] + '.' + index + '.' + code;
         button.appendChild(document.createTextNode(nameOfTextNodes[i]));
 
-        button.addEventListener('click', function() {
+        button.addEventListener('click', async function() {
             // console.log(this.id + ' 클릭됨');
             var dummy;
             let kindOfButton, dbIndexOfButton, codeOfButton;
             [dummy, kindOfButton, dbIndexOfButton, codeOfButton] = this.id.split('.');
 
             if (kindOfButton == 'download') {
-                var res = getVideo(dbIndexOfButton, codeOfButton);
+                this.style.backgroundColor = 'gray';
+                this.innerText = '다운로드 중...';
+
+                var res = await getVideo(dbIndexOfButton, codeOfButton);
                 if (res == 1) {
                     window.alert('다운로드 실패')
+                } else {
+                    let grandGrandGrandparent = this.parentNode.parentNode.parentNode.parentNode;
+                    let secondChild = grandGrandGrandparent.children[1];
+                    if (secondChild) {
+                        for (let i = 0; i < 2; i++) {
+                            let child = secondChild.children[i];
+                                child.style.textDecoration = 'line-through';
+                        }
+                    }
+
+                    this.style.backgroundColor = '#4CAF50';
+                    this.innerText = '다운로드';
                 }
+
+                this.style.backgroundColor = '#4CAF50';
+                this.innerText = '다운로드';
             // } else if (kindOfButton == 'deactivate') {
             //     var res = deactivateItem(dbIndexOfButton);
             //     if (res == 1) {
@@ -97,14 +114,21 @@ function addItemToList(upperText, lowerText, code, index, isStrikthrough=0) {
                 var res = deleteItem(dbIndexOfButton);
                 if (res == 1) {
                     window.alert('삭제 실패')
+                } else {
+                    let grandGrandGrandGrandparent = this.parentNode.parentNode.parentNode.parentNode.parentNode;
+                    let position = Array.from(grandGrandGrandGrandparent.parentNode.children).indexOf(grandGrandGrandGrandparent) + 1;
+                    delUl(position-1);
                 }
             } else if (kindOfButton == 'ban') {
                 var res = banItem(dbIndexOfButton, codeOfButton);
                 if (res == 1) {
                     window.alert('차단 실패')
-                }
-                if (res == 2) {
+                } else if (res == 2) {
                     window.alert('이미 차단되었습니다')
+                } else {
+                    let grandGrandGrandGrandparent = this.parentNode.parentNode.parentNode.parentNode.parentNode;
+                    let position = Array.from(grandGrandGrandGrandparent.parentNode.children).indexOf(grandGrandGrandGrandparent) + 1;
+                    delUl(position-1);
                 }
             } else {
                 window.alert("오류발생")
@@ -127,7 +151,6 @@ function addItemToList(upperText, lowerText, code, index, isStrikthrough=0) {
     let liEliment = document.createElement('li');
     liEliment.appendChild(itemContainer);
 
-    
     let playlist = document.getElementById('playlist');
     playlist.appendChild(liEliment);
     
@@ -279,13 +302,22 @@ async function postLink(e) {
             const jsonData = await response.json();
             console.log(jsonData);
 
-            let result = jsonData.result;
-            if (result = "success") {
-                window.alert("정상적으로 등록되었습니다.");
+            if (jsonData.result == 'success') {
+                window.alert('정상적으로 등록되었습니다.');
                 addItemToList(jsonData.title, Unix_timestamp(jsonData.unixtime), jsonData.code, jsonData.index)
 
                 let input = document.querySelector('#linkInput');
                 input.value = '';
+            } else if (jsonData.result == 'timeout') {
+                window.alert('영상이 너무 깁니다.')
+            } else if (jsonData.result == 'banned') {
+                window.alert('차단된 동영상입니다.')
+            } else if (jsonData.result == 'duplicated') {
+                window.alert('이미 등록된 동영상입니다.')
+            } else if (jsonData.result == 'not_video') {
+                window.alert('유튜브 동영상 링크가 아닙니다.')
+            } else {
+                window.alert('오류가 발생했습니다.')
             }
 
             
@@ -335,6 +367,14 @@ async function fillList() {
 async function resetList() {
     let ulElement = document.querySelector('#playlist');
     ulElement.innerHTML = '';
+
+    return 0;
+}
+
+async function delUl(index) {
+    let playlist = document.getElementById('playlist');
+    let liToDel = playlist.children[index];
+    playlist.removeChild(liToDel);
 
     return 0;
 }

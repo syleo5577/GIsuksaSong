@@ -25,10 +25,14 @@ def getData(gen : int):
         list: DB data
     """
     
-    path = f"./db/db_{gen}.pkl"
-    with open(path, "rb") as fr:
-        arr : list[list] = pickle.load(fr)
-    
+    dir = f"./db/db_{gen}.pkl"
+    if os.path.isfile(dir):
+        with open(dir, "rb") as fr:
+            arr : list[list] = pickle.load(fr)
+    else:
+        arr = []
+        setData(gen, arr)
+        
     # db 데이터 받은거 return
     return arr
 
@@ -90,13 +94,13 @@ def dbAppend(gen : int, code : str):
         # 시간 검사
         lenth, title = link_functions.getLengthAndTitle(code)
         if lenth > 600: # 10분 넘어가는 영상 거름
-            return "timeout", 4
+            return "timeout", [0, '', '', 0, 0, 0, 0, 0, 0]
         
         # 차단 여부 검사
         with open(f"db/ban_{gen}.pkl", "rb") as fr:
             banDict = pickle.load(fr)
         if code in banDict:
-            return "banned", 3
+            return "banned", [0, '', '', 0, 0, 0, 0, 0, 0]
         
         # 중복 검사
         isDuplicated = False
@@ -109,7 +113,7 @@ def dbAppend(gen : int, code : str):
                 continue
         
         if isDuplicated:
-            return "duplicated", 2
+            return "duplicated", [0, '', '', 0, 0, 0, 0, 0, 0]
         
         # (검사를 통과하면) db에 추가
         arr.append([len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0])
@@ -117,7 +121,7 @@ def dbAppend(gen : int, code : str):
         
         return "success", [len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0]
     except:
-        return "runtime error", 1
+        return "runtime error", [0, '', '', 0, 0, 0, 0, 0, 0]
 
 def ban(gen : int, code : str):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
@@ -135,16 +139,19 @@ def ban(gen : int, code : str):
     
     try:
         # db 데이터 불러오기
-        path = f"db/ban_{gen}.pkl"
-        with open(path, "rb") as fr:
-            banDict = pickle.load(fr)
+        dir = f"db/ban_{gen}.pkl"
+        if os.path.isfile(dir):
+            with open(dir, "rb") as fr:
+                banDict = pickle.load(fr)
+        else:
+            banDict = dict()
         
         # 중복검사
         if code in banDict:
             return 2
         
         # db 업데이트
-        with open(path, "wb") as fw:
+        with open(dir, "wb") as fw:
             pickle.dump(banDict, fw)
         
         return 0
@@ -242,4 +249,6 @@ if __name__ == "__main__":
     # arr = getData(0)
     # print(arr)
     
-    print(downloadVideo("tnTPaLOaHz8"))
+    # print(downloadVideo("tnTPaLOaHz8"))
+    
+    setData(88, [])
