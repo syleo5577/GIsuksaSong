@@ -10,8 +10,9 @@ let generation = searchParams.get("gen");
  * @param {string} upperText 아랫부분 텍스트(영상 등록 일시)
  * @param {string} code 영상 코드
  * @param {int} index db에서의 인덱스
+ * @param {int} [isStrikthrough=false] 취소선 여부
  */
-function addItemToList(upperText, lowerText, code, index) {
+function addItemToList(upperText, lowerText, code, index, isStrikthrough=0) {
     // itemContainer
     let itemContainer = document.createElement('div');
     itemContainer.classList.add('playlist-item');
@@ -37,12 +38,18 @@ function addItemToList(upperText, lowerText, code, index) {
     let upperTextElement = document.createElement('p');
     upperTextElement.classList.add('upper-text-eliment');
     upperTextElement.appendChild(document.createTextNode(upperText));
+    if (isStrikthrough == 1) {
+        upperTextElement.style.textDecoration = 'line-through';
+    }
     textContainer.appendChild(upperTextElement);
 
     // lowerTexteliment
     let lowerTextElement = document.createElement('p');
     lowerTextElement.classList.add('lower-text-eliment');
     lowerTextElement.appendChild(document.createTextNode(lowerText));
+    if (isStrikthrough == 1) {
+        lowerTextElement.style.textDecoration = 'line-through';
+    }
     textContainer.appendChild(lowerTextElement);
     
     
@@ -65,19 +72,19 @@ function addItemToList(upperText, lowerText, code, index) {
         let button = document.createElement('button');
         button.classList.add('round-button');
         button.classList.add('button-' + nameOfCssClassAndId[i]);
-        button.id = 'button-' + nameOfCssClassAndId[i] + '-' + index + '-' + code;
+        button.id = 'button.' + nameOfCssClassAndId[i] + '.' + index + '.' + code;
         button.appendChild(document.createTextNode(nameOfTextNodes[i]));
 
         button.addEventListener('click', function() {
-            console.log(this.id + ' 클릭됨');
+            // console.log(this.id + ' 클릭됨');
             var dummy;
-            let kindOfButton, indexOfButton;
-            [dummy, kindOfButton, indexOfButton] = thid.id.split('-')
+            let kindOfButton, dbIndexOfButton, codeOfButton;
+            [dummy, kindOfButton, dbIndexOfButton, codeOfButton] = this.id.split('.');
 
             if (kindOfButton == 'download') {
-
+                getVideo(dbIndexOfButton, codeOfButton);
             } else if (kindOfButton == 'deactivate') {
-
+                deactivateItem(dbIndexOfButton);
             } else if (kindOfButton == 'delete') {
 
             } else if (kindOfButton == 'ban') {
@@ -116,7 +123,6 @@ function addItemToList(upperText, lowerText, code, index) {
  */
 async function getData() {
     let playlistArr;
-
     try {
         let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
         let data = await response.json();
@@ -129,65 +135,90 @@ async function getData() {
     return playlistArr;
 }
 
-async function getVideo(code) {
-    let playlistArr;
-
+async function getVideo(index, code) {
     try {
-        let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
-        let data = await response.json();
-        playlistArr = data.arr;
+        let response = await fetch(`/list/download?gen=${generation}&index=${index}&code=${code}`, { method: 'GET' });
+
+        if (!response.ok) {
+            console.error('Server response was not ok.', response);
+            return 1;
+        }
+
+        let blob = await response.blob();
+        let url = window.URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = code + '.mp3';
+        a.click()
     } catch (error) {
         console.error('Error:', error);
     }
 
-    console.log(playlistArr);
-    return playlistArr;
+    return 0;
 }
 
-async function deactivateItem() {
-    let playlistArr;
-
+async function deactivateItem(index) {
+    let data;
     try {
-        let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
-        let data = await response.json();
-        playlistArr = data.arr;
+        let response = await fetch(`/list/deactivate?gen=${generation}&index=${index}`, { method: 'GET' });
+        
+        if (!response.ok) {
+            console.error('Server response was not ok.', response);
+            return 1;
+        }
+
+        data = await response.json();
+
+        if (data.result == 'success') {
+            return 0;
+        } else {
+            return 1;
+        }
     } catch (error) {
         console.error('Error:', error);
     }
-
-    console.log(playlistArr);
-    return playlistArr;
 }
 
-async function deleteItem() {
-    let playlistArr;
-
+async function deleteItem(index) {
+    let data;
     try {
-        let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
-        let data = await response.json();
-        playlistArr = data.arr;
+        let response = await fetch(`/list/delete?gen=${generation}&index=${index}`, { method: 'GET' });
+        
+        if (!response.ok) {
+            console.error('Server response was not ok.', response);
+            return 1;
+        }
+
+        data = await response.json();
+
+        if (data.result == 'success') {
+            return 0;
+        } else {
+            return 1;
+        }
     } catch (error) {
         console.error('Error:', error);
     }
-
-    console.log(playlistArr);
-    return playlistArr;
 }
 
-async function banItem() {
-    let playlistArr;
+//     console.log(playlistArr);
+//     return playlistArr;
+// }
 
-    try {
-        let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
-        let data = await response.json();
-        playlistArr = data.arr;
-    } catch (error) {
-        console.error('Error:', error);
-    }
+// async function banItem() {
+//     let playlistArr;
 
-    console.log(playlistArr);
-    return playlistArr;
-}
+//     try {
+//         let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
+//         let data = await response.json();
+//         playlistArr = data.arr;
+//     } catch (error) {
+//         console.error('Error:', error);
+//     }
+
+//     console.log(playlistArr);
+//     return playlistArr;
+// }
 
 /**
  * input에 입력한 링크 서버로 보냄
@@ -236,7 +267,7 @@ async function postLink(e) {
 /**
  * 유닉스 시간 바꿔줌
  * @param {float | int} t 
- * @returns yyyy-mm-
+ * @returns yyyy-mm-dd hh:mm:ss
  */
 function Unix_timestamp(t){
     const date = new Date(t*1000);
@@ -262,7 +293,7 @@ async function fillList() {
     for (let i = 0; i < playlistLength; i++) {
         let index, code, title, videoLength, uploadTime, isDeactivated, isDeleted, likes, dislikes;
         [index, code, title, videoLength, uploadTime, isDeactivated, isDeleted, likes, dislikes] = playlistArr[i];
-        addItemToList(title, Unix_timestamp(uploadTime), code, index);
+        addItemToList(title, Unix_timestamp(uploadTime), code, index, isStrikthrough=isDeactivated);
     }
 
     return 0
