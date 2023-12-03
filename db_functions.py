@@ -48,7 +48,7 @@ def getDataWithoutDeleted(gen : int):
     newarr = []
     l = len(arr)
     for i in range(l):
-        if arr[i][5] == 0 and arr[i][6] == 0:
+        if arr[i][6] == 0:
             newarr.append(arr[i])
         
     return newarr
@@ -201,7 +201,7 @@ def delete(gen : int, i : int):
     except:
         return 1
 
-def downloadVideo(code : str):
+async def downloadVideo(code : str):
     """유튜브의 code 영상 다운로드. 이미 있으면 다운로드 안함
 
     Args:
@@ -214,8 +214,8 @@ def downloadVideo(code : str):
     
     try:
         # 파일 존재 여부 확인
-        mp4_file = f"db/videos/{code}.mp4"
-        mp3_file = f"db/audio/{code}.mp3"
+        mp4_file = f"db/mp4s/{code}.mp4"
+        mp3_file = f"db/mp3s/{code}.mp3"
         if os.path.isfile(mp3_file):
             return mp3_file
     
@@ -223,7 +223,7 @@ def downloadVideo(code : str):
         url = f"https://youtube.com/watch?v={code}"
         yt = YouTube(url)
         video = yt.streams.filter(only_audio=True).first()
-        video.download(output_path=f'db/video', filename=code)
+        video.download(output_path=f'db/mp4s', filename=code+'.mp4')
 
         # 다운로드한 영상을 mp3로 변환
         clip = mp.AudioFileClip(mp4_file)
@@ -237,32 +237,9 @@ def downloadVideo(code : str):
     except:
         return "runtime error"
 
-def deleteVideo(gen : int, index : int):
-    """**DO NOT USE**
-    db/videos에서 파일 지움. index는 db_gen.pkl에서의 인덱스
-
-    Args:
-        gen (int): generation
-        index (int): index number of video to delete
-
-    Returns:
-        int:
-            0: success
-            1: runtime error
-    """
-    
-    try:
-        arr = getData(gen)
-        title = arr[index][2]
-        path = f"db/videos/{title}.mp3"
-        
-        os.remove(path)
-        
-        return 0
-    except:
-        return 1
-
 if __name__ == "__main__":
-    # setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
-    arr = getData(0)
-    print(arr)
+    # # setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
+    # arr = getData(0)
+    # print(arr)
+    
+    print(downloadVideo("tnTPaLOaHz8"))
