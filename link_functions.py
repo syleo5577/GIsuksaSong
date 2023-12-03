@@ -11,7 +11,7 @@ def addHTTPS(url : str):
         str, 'https://'가 추가된 URL
     """
     
-    https = re.compile("https{0, 1}://")
+    https = re.compile("https{0,1}://")
     
     if not https.match(url):
         return "https://" + url
