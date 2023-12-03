@@ -1,24 +1,16 @@
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles 
+import os
 from pydantic import BaseModel
 import db_functions as db
 import link_functions as link
 
 
 app = FastAPI()
-app.mount("/D:\Code/vscode/GisuksaSong", StaticFiles(directory="Gisuksasong"), name="templates")
-
-templates = Jinja2Templates(directory="templates")
-
-
-class linkInput(BaseModel):
-    url: str
-
-class DataStorage(BaseModel):
-    data: list[list]
-
+app.mount("/templates", StaticFiles(directory="../GisuksaSong/templates"), name="templates")
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,18 +21,89 @@ app.add_middleware(
 )
 
 
+# templates = Jinja2Templates(directory="templates")
 
 
-@app.get("/main")
-async def root(request: Request):
-    return templates.TemplateResponse("main.html", {"request": request})
+class linkInput(BaseModel):
+    url: str
 
-@app.get("/main/data")
-async def get_item():
-    data = db.getDataWithoutDeleted(0)
-    return {"data": data}  # GET 요청시 저장된 데이터를 반환합니다.
+class DataStorage(BaseModel):
+    data: list[list]
 
-@app.post("/main")
-async def create_item(item: linkInput):
-    print(item)
-    return {"value": item.url}
+
+@app.get("/")
+async def blank():
+    return "Hello, world!"
+
+# @app.get("/list")
+# async def root(request: Request):
+    # return templates.TemplateResponse("main.html", {"request": request})
+
+@app.get("/list")
+async def root():
+    return FileResponse("templates/main.html")
+
+@app.get("/list/data")
+async def get_item(gen : int):
+    print("asdf")
+    data = db.getDataWithoutDeleted(gen)
+    return {"arr": data}  # 저장된 데이터 반환
+
+@app.get("/list/audio")
+async def get_audio(gen : int, index : int):
+    path = await db.downloadVideo(gen, index)
+    db.deactivate(gen, index)
+    return FileResponse(path, filename=f"{os.path.basename(path)}")
+
+@app.get("/list/deactivate")
+async def deleteItem(gen : int, index : int):
+    # r = db.deactivate(gen, index)
+    # if r == 0:
+    #     return {"result": "success"}
+    # else:
+    #     return {"result": "runtime error"}
+    print("deactivate:", gen, index)
+    return {"messege": "deactivate"}
+
+@app.get("/list/delete")
+async def deleteItem(gen : int, index : int):
+    # r = db.delete(gen, index)
+    # if r == 0:
+    #     return {"result": "success"}
+    # else:
+    #     return {"result": "runtime error"}
+    print("delete:", gen, index)
+    return {"messege": "delete"}
+
+@app.get("/list/ban")
+async def deleteItem(gen : int, index : int):
+    # arr = db.getData(gen)
+    # code = arr[index][2]
+    
+    # r = db.ban(gen, code)
+    # if r == 0:
+    #     return {"result": "success"}
+    # elif r == 2:
+    #     return {"result": "duplicated"}
+    # else:
+    #     return {"result": "runtime error"}
+    print("ban:", gen, index)
+    return {"messege": "ban"}
+
+@app.post("/list")
+async def post_url(gen : int, item : linkInput):
+    # print(url)
+    url = link.addHTTPS(item.url)
+    url = item.url
+    # print(url)
+    code = link.getYoutubeVideoID(url)
+    # print(code)
+    if code:
+        print("code:", code)
+        r = db.dbAppend(gen, code)
+        return {"result": r}
+    else:
+        print("NOT YOUTUBE VIDEO")
+        return {"result": "not youtube video"}
+    # print(item)
+    # return {"messege": "asdf"}
