@@ -2,16 +2,21 @@ let currentURL = new URL(window.location.href);
 let searchParams = new URLSearchParams(currentURL.search);
 let generation = searchParams.get("gen");
 
+var playlistLength = -1;
+
 
 /**
- * 플레이리스트 채우는 함수. int는 
+ * 플레이리스트 채우는 함수.
  * @param {string} lowerText 윗부분 텍스트(영상 제목)
  * @param {string} upperText 아랫부분 텍스트(영상 등록 일시)
  * @param {string} code 영상 코드
- * @param {int} index db에서의 인덱스
- * @param {int} [isStrikthrough=false] 취소선 여부
+ * @param {int} indexInDB db에서의 인덱스
+ * @param {int} [isStrikthrough=0] 취소선 여부
  */
-async function addItemToList(upperText, lowerText, code, index, isStrikthrough=0, indexToInsert=-1) {
+async function playlistAppend(upperText, lowerText, code, indexInDB, isStrikthrough=0) {
+
+    //make item to append
+
     // itemContainer
     let itemContainer = document.createElement('div');
     itemContainer.classList.add('playlist-item');
@@ -68,72 +73,16 @@ async function addItemToList(upperText, lowerText, code, index, isStrikthrough=0
     // let nameOfTextNodes = ['다운로드', '비활성화', '삭제', '차단'];
     // let nameOfCssClassAndId = ['download', 'deactivate', 'delete', 'ban'];
     let nameOfTextNodes = ['다운로드', '삭제', '차단'];
-    let nameOfCssClassAndId = ['download', 'delete', 'ban'];
+    let kindOfButton = ['download', 'delete', 'ban'];
     for (var i = 0; i < 3; i++){
         let button = document.createElement('button');
         button.classList.add('round-button');
-        button.classList.add('button-' + nameOfCssClassAndId[i]);
-        button.id = 'button.' + nameOfCssClassAndId[i] + '.' + index + '.' + code;
+        button.classList.add('button-' + kindOfButton[i]);
+        button.id = 'button.' + kindOfButton[i] + '.' + playlistLength++ + '.' + indexInDB + '.' + code;
         button.appendChild(document.createTextNode(nameOfTextNodes[i]));
 
         button.addEventListener('click', async function() {
-            // console.log(this.id + ' 클릭됨');
-            var dummy;
-            let kindOfButton, dbIndexOfButton, codeOfButton;
-            [dummy, kindOfButton, dbIndexOfButton, codeOfButton] = this.id.split('.');
-
-            if (kindOfButton == 'download') {
-                this.style.backgroundColor = 'gray';
-                this.innerText = '다운로드 중...';
-
-                var res = await getVideo(dbIndexOfButton, codeOfButton);
-                if (res == 1) {
-                    window.alert('다운로드 실패')
-                } else {
-                    let grandGrandGrandparent = this.parentNode.parentNode.parentNode.parentNode;
-                    let secondChild = grandGrandGrandparent.children[1];
-                    if (secondChild) {
-                        for (let i = 0; i < 2; i++) {
-                            let child = secondChild.children[i];
-                                child.style.textDecoration = 'line-through';
-                        }
-                    }
-
-                    this.style.backgroundColor = '#4CAF50';
-                    this.innerText = '다운로드';
-                }
-
-                this.style.backgroundColor = '#4CAF50';
-                this.innerText = '다운로드';
-            // } else if (kindOfButton == 'deactivate') {
-            //     var res = deactivateItem(dbIndexOfButton);
-            //     if (res == 1) {
-            //         window.alert('비활성화 실패')
-            //     }
-            } else if (kindOfButton == 'delete') {
-                var res = deleteItem(dbIndexOfButton);
-                if (res == 1) {
-                    window.alert('삭제 실패')
-                } else {
-                    let grandGrandGrandGrandparent = this.parentNode.parentNode.parentNode.parentNode.parentNode;
-                    let position = Array.from(grandGrandGrandGrandparent.parentNode.children).indexOf(grandGrandGrandGrandparent) + 1;
-                    delUl(position-1);
-                }
-            } else if (kindOfButton == 'ban') {
-                var res = banItem(dbIndexOfButton, codeOfButton);
-                if (res == 1) {
-                    window.alert('차단 실패')
-                } else if (res == 2) {
-                    window.alert('이미 차단되었습니다')
-                } else {
-                    let grandGrandGrandGrandparent = this.parentNode.parentNode.parentNode.parentNode.parentNode;
-                    let position = Array.from(grandGrandGrandGrandparent.parentNode.children).indexOf(grandGrandGrandGrandparent) + 1;
-                    delUl(position-1);
-                }
-            } else {
-                window.alert("오류발생")
-            }
-            
+            buttonsInteraction(this.id);
         });
 
         buttonsLi.appendChild(button);
@@ -162,117 +111,112 @@ async function addItemToList(upperText, lowerText, code, index, isStrikthrough=0
  * @returns array[array[int, str, str, int * 6]]
  */
 async function getData() {
-    let playlistArr;
     try {
         let response = await fetch(`/list/data?gen=${generation}`, { method: 'GET' });
         let data = await response.json();
-        playlistArr = data.arr;
+        // console.log(playlistArr);
+        return data.arr;
     } catch (error) {
         console.error('Error:', error);
+        return 'error'
     }
 
-    console.log(playlistArr);
-    return playlistArr;
 }
 
-async function getVideo(index, code) {
-    try {
-        let response = await fetch(`/list/download?gen=${generation}&index=${index}&code=${code}`, { method: 'GET' });
+async function getVideo(buttonId) {
+    let kindOfButton, indexInJS, indexInDB, code;
+    [dummy, kindOfButton, indexInJS, indexInDB, code] = buttonId.split('.');
 
+    let button = document.getElementById(buttonId);
+    try {
+        let response = await fetch(`/list/download?gen=${generation}&index=${indexInDB}&code=${code}`, { method: 'GET' });
+        
         if (!response.ok) {
             console.error('Server response was not ok.', response);
-
-            return 1;
+            return 'server error';
         }
 
+        button.innerHTML = '다운로드 중...';
+        button.style.backgroundColor = 'gray';
+        
         let blob = await response.blob();
         let url = window.URL.createObjectURL(blob);
         let a = document.createElement('a');
         a.href = url;
         a.download = code + '.mp3';
         a.click()
+
+        button.innerHTML = await '다운로드';
+        button.style.backgroundColor = await '#4CAF50';
+        return 'success';
     } catch (error) {
         console.error('Error:', error);
 
-        return 1;
+        button.innerHTML = await '다운로드';
+        button.style.backgroundColor = await '#4CAF50';
+
+        return 'catch error';
     }
 
-    return 0;
 }
 
-async function deactivateItem(index) {
+async function deleteItem(buttonId) {
+    let kindOfButton, indexInJS, indexInDB, code;
+    [dummy, kindOfButton, indexInJS, indexInDB, code] = buttonId.split('.');
+    console.log(buttonId);
+    // let button = document.getElementById(buttonId);
+    
     try {
-        let response = await fetch(`/list/deactivate?gen=${generation}&index=${index}`, { method: 'GET' });
+        let response = await fetch(`/list/delete?gen=${generation}&index=${indexInDB}&code=${code}`, { method: 'GET' });
         
-        if (!response.ok) {
+        if  (!response.ok) {
             console.error('Server response was not ok.', response);
-            return 1;
+            return 'server error';
         }
-
+        
         let data = await response.json();
-
+        
         if (data.result == 'success') {
-            return 0;
-        } else {
-            return 1;
+            let playlist = document.getElementById('playlist');
+            let divElement = document.createElement('div');
+            playlist.replaceChild(divElement, playlist.children[indexInJS]);
         }
+
+
+
+        return data.result;
     } catch (error) {
         console.error('Error:', error);
+        return 'catch error';
     }
 }
 
-async function deleteItem(index) {
+async function banItem(buttonId) {
+    let kindOfButton, indexInJS, indexInDB, code;
+    [dummy, kindOfButton, indexInJS, indexInDB, code] = buttonId.split('.');
+    console.log(buttonId);
+
     try {
-        let response = await fetch(`/list/delete?gen=${generation}&index=${index}`, { method: 'GET' });
-        // console.log(response);
-
-        if (!response.ok) {
-            console.error('Server response was not ok.', response);
-
-            return 1;
-        }
-
-        let data = await response.json();
-
-        if (data.result == 'success') {
-            return 0;
-        } else {
-            return 1;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-async function banItem(index, code) {
-    var res = deleteItem(index);
-    if (res == 1) {
-        return 1;
-    }
-
-    let response;
-    try {
-        response = await fetch(`/list/ban?gen=${generation}&index=${index}&code=${code}`, { method: 'GET' });
+        let response = await fetch(`/list/ban?gen=${generation}&index=${index}&code=${code}`, { method: 'GET' });
         
         if  (!response.ok) {
             console.error('Server response was not ok.', response);
             
-            return 1;
+            return 'server error';
         }
         
         let data = await response.json();
-
+        
         if (data.result == 'success') {
-            return 0;
-        } else if (data.result == 'duplicated') {
-            return 2;
-        } else {
-            return 1;
+            let playlist = document.getElementById('playlist');
+            let divElement = document.createElement('div');
+            playlist.replaceChild(divElement, playlist.children[indexInJS]);
         }
+
+        return data.result;
     } catch (error) {
         console.error('Error:', error);
-
-        return 1;
+        return 'catch error';
     }
 }
 
@@ -296,7 +240,9 @@ async function postLink(e) {
             });
     
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                console.error('Server response was not ok.', response);
+            
+                return 'server error';
             }
     
             const jsonData = await response.json();
@@ -304,7 +250,7 @@ async function postLink(e) {
 
             if (jsonData.result == 'success') {
                 window.alert('정상적으로 등록되었습니다.');
-                addItemToList(jsonData.title, Unix_timestamp(jsonData.unixtime), jsonData.code, jsonData.index)
+                playlistAppend(jsonData.title, Unix_timestamp(jsonData.unixtime), jsonData.code, jsonData.index)
 
                 let input = document.querySelector('#linkInput');
                 input.value = '';
@@ -314,7 +260,7 @@ async function postLink(e) {
                 window.alert('차단된 동영상입니다.')
             } else if (jsonData.result == 'duplicated') {
                 window.alert('이미 등록된 동영상입니다.')
-            } else if (jsonData.result == 'not_video') {
+            } else if (jsonData.result == 'not video') {
                 window.alert('유튜브 동영상 링크가 아닙니다.')
             } else {
                 window.alert('오류가 발생했습니다.')
@@ -324,13 +270,14 @@ async function postLink(e) {
             return jsonData;
         } catch (error) {
             console.error('Error:', error);
+            return 'catch error';
         }
     }
 }
 
 
 /**
- * 유닉스 시간 바꿔줌
+ * 유닉스 시간을 사람이 알아볼 수 있게 바꿔줌
  * @param {float | int} t 
  * @returns yyyy-mm-dd hh:mm:ss
  */
@@ -348,33 +295,40 @@ function Unix_timestamp(t){
 }
 
 /**
- * 리스트 채우기
+ * 최초 로드시 리스트 채우기
  * @returns 0
  */
 async function fillList() {
     let playlistArr = await getData();
-    let playlistLength = playlistArr.length;
+    let playlistArrLength = playlistArr.length;
 
-    for (let i = 0; i < playlistLength; i++) {
-        let index, code, title, videoLength, uploadTime, isDeactivated, isDeleted, likes, dislikes;
-        [index, code, title, videoLength, uploadTime, isDeactivated, isDeleted, likes, dislikes] = playlistArr[i];
-        addItemToList(title, Unix_timestamp(uploadTime), code, index, isStrikthrough=isDeactivated);
+    for (let i = 0; i < playlistArrLength; i++) {
+        let index = playlistArr[i][0];
+        let code = playlistArr[i][1];
+        let title = playlistArr[i][2];
+        let uploadTime = playlistArr[i][4];
+        let isDeactivated = playlistArr[i][5];
+        playlistAppend(title, Unix_timestamp(uploadTime), code, index, isStrikthrough=isDeactivated);
     }
 
     return 0
 }
 
-async function resetList() {
-    let ulElement = document.querySelector('#playlist');
-    ulElement.innerHTML = '';
+async function buttonsInteraction(thisId) {
+    let kindOfButton, indexInDB, code;
+    [dummy, kindOfButton, indexInJS, indexInDB, code] = thisId.split('.');
 
-    return 0;
-}
+    if (kindOfButton == 'download') {
+        var res = await getVideo(thisId);
+    } else if (kindOfButton == 'delete') {
+        var res = await deleteItem(thisId);
+    } else if (kindOfButton == 'ban') {
+        var res = await banItem(thisId);
+    } else {
+        window.alert("오류발생");
+    }
 
-async function delUl(index) {
-    let playlist = document.getElementById('playlist');
-    let liToDel = playlist.children[index];
-    playlist.removeChild(liToDel);
+    window.alert(res);
 
     return 0;
 }

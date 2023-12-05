@@ -38,7 +38,6 @@ async def root():
 
 @app.get("/list/data")
 async def getData(gen : int):
-    print("asdf")
     data = db.getDataWithoutDeleted(gen)
     return {"arr": data} 
 
@@ -50,36 +49,16 @@ async def getVideo(gen : int, index : int, code : str):
         return FileResponse(dir)
     else:
         return {"error": dir}
-        
-
-@app.get("/list/deactivate")
-async def deactivateItem(gen : int, index : int):
-    r = db.deactivate(gen, index)
-    if r == 0:
-        return {"result": "success"}
-    else:
-        return {"result": "runtime error"}
 
 @app.get("/list/delete")
-async def deleteItem(gen : int, index : int):
-    r = db.delete(gen, index)
-    if r == 0:
-        return {"result": "success"}
-    else:
-        return {"result": "runtime error"}
+async def deleteItem(gen : int, index : int, code : str):
+    result = db.delete(gen, index)
+    return {'result': result}
 
 @app.get("/list/ban")
-async def deleteItem(gen : int, index : int):
-    arr = db.getData(gen)
-    code = arr[index][2]
-    
-    r = db.ban(gen, code)
-    if r == 0:
-        return {"result": "success"}
-    elif r == 2:
-        return {"result": "duplicated"}
-    else:
-        return {"result": "runtime error"}
+async def banItem(gen : int, index : int, code: str):
+    result = db.ban(gen, index, code)
+    return {'result': result}
 
 @app.post("/list")
 async def post_url(gen : int, item : linkInput):
@@ -97,4 +76,4 @@ async def post_url(gen : int, item : linkInput):
         return {"result": r}
     else:
         print("NOT YOUTUBE VIDEO")
-        return {"result": "not_video"}
+        return {"result": "not video"}

@@ -123,18 +123,16 @@ def dbAppend(gen : int, code : str):
     except:
         return "runtime error", [0, '', '', 0, 0, 0, 0, 0, 0]
 
-def ban(gen : int, code : str):
+def ban(gen : int, i : int, code : str):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
 
     Args:
         gen (int): generation
+        i (int): index
         code (str): youtube video code
 
     Returns:
-        int:
-            0: success
-            1: runtime error
-            2: duplicated
+        str: 실행 결과
     """
     
     try:
@@ -145,18 +143,19 @@ def ban(gen : int, code : str):
                 banDict = pickle.load(fr)
         else:
             banDict = dict()
+        print(banDict)
         
         # 중복검사
         if code in banDict:
-            return 2
+            return 'duplicated'
         
         # db 업데이트
         with open(dir, "wb") as fw:
             pickle.dump(banDict, fw)
         
-        return 0
+        return 'success'
     except:
-        return 1
+        return 'runtime error'
 
 def deactivate(gen : int, i : int):
     """db_{gen}.pkl에서 i번 인덱스의 비활성화 여부를 1로 바꿈
@@ -191,9 +190,7 @@ def delete(gen : int, i : int):
         i (int): index number
 
     Returns:
-        int:
-            0: success
-            1: runtime error
+        str: 실행 결과
     """
     
     try:
@@ -204,9 +201,9 @@ def delete(gen : int, i : int):
         arr[i][6] = 1
         setData(gen, arr)
         
-        return 0
+        return 'success'
     except:
-        return 1
+        return 'runtime error'
 
 async def downloadVideo(code : str):
     """유튜브의 code 영상 다운로드. 이미 있으면 다운로드 안함
@@ -245,10 +242,15 @@ async def downloadVideo(code : str):
         return "runtime error"
 
 if __name__ == "__main__":
-    # # setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
     # arr = getData(0)
     # print(arr)
     
     # print(downloadVideo("tnTPaLOaHz8"))
     
-    setData(88, [])
+    # setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
+    # print(getData(0))
+    # delete(0, 0)
+    
+    setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
+    print(getData(0))
+    
