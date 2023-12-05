@@ -143,11 +143,8 @@ def ban(gen : int, i : int, code : str):
                 banDict = pickle.load(fr)
         else:
             banDict = dict()
-        print(banDict)
         
-        # 중복검사
-        if code in banDict:
-            return 'duplicated'
+        banDict[code] = 1
         
         # db 업데이트
         with open(dir, "wb") as fw:
@@ -242,14 +239,13 @@ async def downloadVideo(code : str):
         return "runtime error"
 
 if __name__ == "__main__":
-    # arr = getData(0)
-    # print(arr)
+    with open('db/ban_0.pkl', 'wb') as f:
+        d = dict()
+        pickle.dump(d ,f)
     
-    # print(downloadVideo("tnTPaLOaHz8"))
-    
-    # setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
-    # print(getData(0))
-    # delete(0, 0)
+    with open('db/ban_0.pkl', 'rb') as f:
+        d = pickle.load(f)
+        print(d)
     
     setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
     print(getData(0))
