@@ -46,9 +46,9 @@ async def getVideo(gen : int, index : int, code : str):
     dir = await db.downloadVideo(code)
     if os.path.isfile(dir):
         db.deactivate(gen, index)
-        return FileResponse(dir)
+        return FileResponse(dir, headers={"result": 'success'})
     else:
-        return {"error": dir}
+        return {"error": dir, "result": 'runtime error'}
 
 @app.get("/list/delete")
 async def deleteItem(gen : int, index : int, code : str):
@@ -58,6 +58,8 @@ async def deleteItem(gen : int, index : int, code : str):
 @app.get("/list/ban")
 async def banItem(gen : int, index : int, code: str):
     result = db.ban(gen, index, code)
+    if result == 'success':
+        db.delete(gen, index)
     return {'result': result}
 
 @app.post("/list")
