@@ -296,7 +296,7 @@ async function postLink(e) {
             } else if (res == 'runtime error'){
                 window.alert('런타임 에러')
             } else {
-                window.alert('오류가 발생했습니다.(뭔가 비정상적인 일이 발생함.)')
+                window.alert('오류가 발생했습니다. (뭔가 비정상적인 일이 발생함)')
             }
 
             return jsonData;

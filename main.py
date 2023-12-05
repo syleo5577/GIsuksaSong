@@ -30,7 +30,7 @@ class DataStorage(BaseModel):
 
 @app.get("/")
 async def blank():
-    return "Hello, world!"
+    return "터프가이김성민!"
 
 @app.get("/list")
 async def root():
