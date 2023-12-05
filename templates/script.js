@@ -2,8 +2,7 @@ let currentURL = new URL(window.location.href);
 let searchParams = new URLSearchParams(currentURL.search);
 let generation = searchParams.get("gen");
 
-var playlistLength = -1;
-
+var playlistLength = 0;
 
 /**
  * 플레이리스트 채우는 함수.
@@ -51,9 +50,6 @@ async function playlistAppend(upperText, lowerText, code, indexInDB, isStrikthro
     let lowerTextElement = document.createElement('p');
     lowerTextElement.classList.add('lower-text-eliment');
     lowerTextElement.appendChild(document.createTextNode(lowerText));
-    if (isStrikthrough == 1) {
-        lowerTextElement.style.textDecoration = 'line-through';
-    }
     textContainer.appendChild(lowerTextElement);
     
     
@@ -78,7 +74,7 @@ async function playlistAppend(upperText, lowerText, code, indexInDB, isStrikthro
         let button = document.createElement('button');
         button.classList.add('round-button');
         button.classList.add('button-' + kindOfButton[i]);
-        button.id = 'button.' + kindOfButton[i] + '.' + playlistLength++ + '.' + indexInDB + '.' + code;
+        button.id = 'button.' + kindOfButton[i] + '.' + playlistLength + '.' + indexInDB + '.' + code;
         button.appendChild(document.createTextNode(nameOfTextNodes[i]));
 
         button.addEventListener('click', async function() {
@@ -108,7 +104,7 @@ async function playlistAppend(upperText, lowerText, code, indexInDB, isStrikthro
 
 /**
  * 
- * @returns array[array[int, str, str, int * 6]]
+ * @returns gotten data or 'error'
  */
 async function getData() {
     try {
@@ -123,50 +119,80 @@ async function getData() {
 
 }
 
+/**
+ * 유튜브 영상 mp3 다운로드
+ * @param {str} buttonId 클릭한 버튼의 Id
+ * @returns 성공/실패 여부
+ */
 async function getVideo(buttonId) {
-    let kindOfButton, indexInJS, indexInDB, code;
-    [dummy, kindOfButton, indexInJS, indexInDB, code] = buttonId.split('.');
-
     let button = document.getElementById(buttonId);
+    button.innerHTML = '다운로드 중...';
+    button.style.backgroundColor = 'gray';
     try {
+        let kindOfButton, indexInJS, indexInDB, code;
+        [dummy, kindOfButton, indexInJS, indexInDB, code] = buttonId.split('.');
+
         let response = await fetch(`/list/download?gen=${generation}&index=${indexInDB}&code=${code}`, { method: 'GET' });
-        
+        console.log(response);
+
         if (!response.ok) {
             console.error('Server response was not ok.', response);
             return 'server error';
         }
-
-        button.innerHTML = '다운로드 중...';
-        button.style.backgroundColor = 'gray';
+        
         
         let blob = await response.blob();
         let url = window.URL.createObjectURL(blob);
         let a = document.createElement('a');
         a.href = url;
         a.download = code + '.mp3';
-        a.click()
+        a.click();
 
-        button.innerHTML = await '다운로드';
-        button.style.backgroundColor = await '#4CAF50';
+        if (response.headers.get('result') == 'success') {
+            async function changePtagStyle() {
+                let playlist = document.getElementById('playlist');
+                pElement = playlist.children[indexInJS].children[0].children[1].children[0];
+                pElement.style.textDecoration = 'line-through';
+            }
+
+            await changePtagStyle();
+        }
+
+
+        async function changeStyle() {
+            button.innerHTML = '다운로드';
+            button.style.backgroundColor = '#4CAF50';
+        }
+
+        await changeStyle();
+
         return 'success';
     } catch (error) {
         console.error('Error:', error);
-
-        button.innerHTML = await '다운로드';
-        button.style.backgroundColor = await '#4CAF50';
-
+        
+        async function changeStyle() {
+            button.innerHTML = '다운로드';
+            button.style.backgroundColor = '#4CAF50';
+        }
+        
+        await changeStyle();
+        
         return 'catch error';
     }
-
+    
 }
 
+/**
+ * 영상을 db/프론트에서 지우기
+ * @param {str} buttonId 클릭한 버튼의 Id
+ * @returns 성공/실패 여부
+ */
 async function deleteItem(buttonId) {
-    let kindOfButton, indexInJS, indexInDB, code;
-    [dummy, kindOfButton, indexInJS, indexInDB, code] = buttonId.split('.');
-    console.log(buttonId);
-    // let button = document.getElementById(buttonId);
     
     try {
+        let kindOfButton, indexInJS, indexInDB, code;
+        [dummy, kindOfButton, indexInJS, indexInDB, code] = buttonId.split('.');
+        // console.log(buttonId);
         let response = await fetch(`/list/delete?gen=${generation}&index=${indexInDB}&code=${code}`, { method: 'GET' });
         
         if  (!response.ok) {
@@ -182,8 +208,6 @@ async function deleteItem(buttonId) {
             playlist.replaceChild(divElement, playlist.children[indexInJS]);
         }
 
-
-
         return data.result;
     } catch (error) {
         console.error('Error:', error);
@@ -191,13 +215,18 @@ async function deleteItem(buttonId) {
     }
 }
 
+/**
+ * 영상을 db/프론트에서 삭제하고 차단하기
+ * @param {str} buttonId 클릭한 버튼의 Id
+ * @returns 성공/실패 여부
+ */
 async function banItem(buttonId) {
     let kindOfButton, indexInJS, indexInDB, code;
     [dummy, kindOfButton, indexInJS, indexInDB, code] = buttonId.split('.');
     console.log(buttonId);
 
     try {
-        let response = await fetch(`/list/ban?gen=${generation}&index=${index}&code=${code}`, { method: 'GET' });
+        let response = await fetch(`/list/ban?gen=${generation}&index=${indexInDB}&code=${code}`, { method: 'GET' });
         
         if  (!response.ok) {
             console.error('Server response was not ok.', response);
@@ -223,7 +252,7 @@ async function banItem(buttonId) {
 /**
  * input에 입력한 링크 서버로 보냄
  * @param {Event} e 
- * @returns json
+ * @returns json 또는 'error'
  */
 async function postLink(e) {
     let inputValue = document.getElementById('linkInput').value;
@@ -309,11 +338,17 @@ async function fillList() {
         let uploadTime = playlistArr[i][4];
         let isDeactivated = playlistArr[i][5];
         playlistAppend(title, Unix_timestamp(uploadTime), code, index, isStrikthrough=isDeactivated);
+        playlistLength++;
     }
 
     return 0
 }
 
+/**
+ * 버튼 눌렀을 때 호출하는 함수
+ * @param {str} thisId 클릭한 버튼의 Id
+ * @returns 0
+ */
 async function buttonsInteraction(thisId) {
     let kindOfButton, indexInDB, code;
     [dummy, kindOfButton, indexInJS, indexInDB, code] = thisId.split('.');
@@ -334,5 +369,6 @@ async function buttonsInteraction(thisId) {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
+    playlistLength = 0;
     fillList();
 });
