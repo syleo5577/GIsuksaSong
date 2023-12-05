@@ -260,7 +260,7 @@ async function postLink(e) {
         e.preventDefault();
         
         try {
-            const response = await fetch('/list?gen=0', {
+            const response = await fetch(`/list?gen=${generation}`, {
                 method: 'POST', 
                 headers: {
                     'Content-Type': 'application/json'
@@ -277,25 +277,28 @@ async function postLink(e) {
             const jsonData = await response.json();
             console.log(jsonData);
 
+
+            res = jsonData.result;
             if (jsonData.result == 'success') {
                 window.alert('정상적으로 등록되었습니다.');
-                playlistAppend(jsonData.title, Unix_timestamp(jsonData.unixtime), jsonData.code, jsonData.index)
+                playlistAppend(jsonData.title, Unix_timestamp(jsonData.unixtime), jsonData.code, jsonData.index);
 
                 let input = document.querySelector('#linkInput');
                 input.value = '';
-            } else if (jsonData.result == 'timeout') {
+            } else if (res == 'timeout') {
                 window.alert('영상이 너무 깁니다.')
-            } else if (jsonData.result == 'banned') {
+            } else if (res == 'banned') {
                 window.alert('차단된 동영상입니다.')
-            } else if (jsonData.result == 'duplicated') {
+            } else if (res == 'duplicated') {
                 window.alert('이미 등록된 동영상입니다.')
-            } else if (jsonData.result == 'not video') {
+            } else if (res == 'not video') {
                 window.alert('유튜브 동영상 링크가 아닙니다.')
+            } else if (res == 'runtime error'){
+                window.alert('런타임 에러')
             } else {
-                window.alert('오류가 발생했습니다.')
+                window.alert('오류가 발생했습니다.(뭔가 비정상적인 일이 발생함.)')
             }
 
-            
             return jsonData;
         } catch (error) {
             console.error('Error:', error);

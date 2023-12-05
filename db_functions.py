@@ -31,7 +31,8 @@ def getData(gen : int):
             arr : list[list] = pickle.load(fr)
     else:
         arr = []
-        setData(gen, arr)
+        with open(dir, "wb") as fw:
+            pickle.dump([], fw)
         
     # db 데이터 받은거 return
     return arr
@@ -97,10 +98,11 @@ def dbAppend(gen : int, code : str):
             return "timeout", [0, '', '', 0, 0, 0, 0, 0, 0]
         
         # 차단 여부 검사
-        with open(f"db/ban_{gen}.pkl", "rb") as fr:
-            banDict = pickle.load(fr)
-        if code in banDict:
-            return "banned", [0, '', '', 0, 0, 0, 0, 0, 0]
+        if os.path.isfile(f"db/ban_{gen}.pkl"):
+            with open(f"db/ban_{gen}.pkl", "rb") as fr:
+                banDict = pickle.load(fr)
+            if code in banDict:
+                return "banned", [0, '', '', 0, 0, 0, 0, 0, 0]
         
         # 중복 검사
         isDuplicated = False
@@ -249,4 +251,3 @@ if __name__ == "__main__":
     
     setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
     print(getData(0))
-    
