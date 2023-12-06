@@ -118,12 +118,13 @@ def dbAppend(gen : int, code : str):
             return "duplicated", [0, '', '', 0, 0, 0, 0, 0, 0]
         
         # (검사를 통과하면) db에 추가
-        arr.append([len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0])
+        arrToAppend = [len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0]
+        arr.append(arrToAppend)
         setData(gen, arr)
         
-        return "success", [len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0]
+        return "success", arrToAppend
     except:
-        return "runtime error", [0, '', '', 0, 0, 0, 0, 0, 0]
+        return "runtime error in dbAppend", [0, '', '', 0, 0, 0, 0, 0, 0]
 
 def ban(gen : int, i : int, code : str):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
@@ -154,7 +155,7 @@ def ban(gen : int, i : int, code : str):
         
         return 'success'
     except:
-        return 'runtime error'
+        return 'runtime error in ban'
 
 def deactivate(gen : int, i : int):
     """db_{gen}.pkl에서 i번 인덱스의 비활성화 여부를 1로 바꿈
@@ -202,7 +203,7 @@ def delete(gen : int, i : int):
         
         return 'success'
     except:
-        return 'runtime error'
+        return 'runtime error in delete'
 
 async def downloadVideo(code : str):
     """유튜브의 code 영상 다운로드. 이미 있으면 다운로드 안함
@@ -238,16 +239,16 @@ async def downloadVideo(code : str):
         
         return mp3_file
     except:
-        return "runtime error"
+        return "runtime error in downloadVideo"
 
 if __name__ == "__main__":
-    with open('db/ban_0.pkl', 'wb') as f:
-        d = dict()
-        pickle.dump(d ,f)
+    # with open('db/ban_0.pkl', 'wb') as f:
+    #     d = dict()
+    #     pickle.dump(d ,f)
     
     with open('db/ban_0.pkl', 'rb') as f:
         d = pickle.load(f)
         print(d)
     
-    setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
+    # setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
     print(getData(0))

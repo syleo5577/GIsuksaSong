@@ -2,8 +2,6 @@ let currentURL = new URL(window.location.href);
 let searchParams = new URLSearchParams(currentURL.search);
 let generation = searchParams.get("gen");
 
-var playlistLength = 0;
-
 /**
  * 플레이리스트 채우는 함수.
  * @param {string} lowerText 윗부분 텍스트(영상 제목)
@@ -12,7 +10,7 @@ var playlistLength = 0;
  * @param {int} indexInDB db에서의 인덱스
  * @param {int} [isStrikthrough=0] 취소선 여부
  */
-async function playlistAppend(upperText, lowerText, code, indexInDB, isStrikthrough=0) {
+async function playlistAppend(indexInJS, upperText, lowerText, code, indexInDB, isStrikthrough=0) {
 
     //make item to append
 
@@ -74,7 +72,7 @@ async function playlistAppend(upperText, lowerText, code, indexInDB, isStrikthro
         let button = document.createElement('button');
         button.classList.add('round-button');
         button.classList.add('button-' + kindOfButton[i]);
-        button.id = 'button.' + kindOfButton[i] + '.' + playlistLength + '.' + indexInDB + '.' + code;
+        button.id = 'button.' + kindOfButton[i] + '.' + indexInJS + '.' + indexInDB + '.' + code;
         button.appendChild(document.createTextNode(nameOfTextNodes[i]));
 
         button.addEventListener('click', async function() {
@@ -104,7 +102,7 @@ async function playlistAppend(upperText, lowerText, code, indexInDB, isStrikthro
 
 /**
  * 
- * @returns gotten data or 'error'
+ * @returns data or 'error'
  */
 async function getData() {
     try {
@@ -237,9 +235,13 @@ async function banItem(buttonId) {
         let data = await response.json();
         
         if (data.result == 'success') {
-            let playlist = document.getElementById('playlist');
-            let divElement = document.createElement('div');
-            playlist.replaceChild(divElement, playlist.children[indexInJS]);
+            async function changeStyle() {
+                let playlist = document.getElementById('playlist');
+                let divElement = document.createElement('div');
+                playlist.replaceChild(divElement, playlist.children[indexInJS]);
+            }
+
+            changeStyle();
         }
 
         return data.result;
@@ -281,7 +283,9 @@ async function postLink(e) {
             res = jsonData.result;
             if (jsonData.result == 'success') {
                 window.alert('정상적으로 등록되었습니다.');
-                playlistAppend(jsonData.title, Unix_timestamp(jsonData.unixtime), jsonData.code, jsonData.index);
+                let playlist = document.getElementById('playlist');
+                let indexInJS = playlist.children.length;
+                playlistAppend(indexInJS, jsonData.title, Unix_timestamp(jsonData.unixtime), jsonData.code, jsonData.index);
 
                 let input = document.querySelector('#linkInput');
                 input.value = '';
@@ -340,8 +344,7 @@ async function fillList() {
         let title = playlistArr[i][2];
         let uploadTime = playlistArr[i][4];
         let isDeactivated = playlistArr[i][5];
-        playlistAppend(title, Unix_timestamp(uploadTime), code, index, isStrikthrough=isDeactivated);
-        playlistLength++;
+        playlistAppend(i, title, Unix_timestamp(uploadTime), code, index, isStrikthrough=isDeactivated);
     }
 
     return 0
