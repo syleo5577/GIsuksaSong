@@ -235,13 +235,13 @@ async function banItem(buttonId) {
         let data = await response.json();
         
         if (data.result == 'success') {
-            async function changeStyle() {
+            async function deleteLi() {
                 let playlist = document.getElementById('playlist');
                 let divElement = document.createElement('div');
                 playlist.replaceChild(divElement, playlist.children[indexInJS]);
             }
 
-            changeStyle();
+            await deleteLi();
         }
 
         return data.result;
@@ -290,17 +290,17 @@ async function postLink(e) {
                 let input = document.querySelector('#linkInput');
                 input.value = '';
             } else if (res == 'timeout') {
-                window.alert('영상이 너무 깁니다.')
+                window.alert('영상이 너무 깁니다.');
             } else if (res == 'banned') {
-                window.alert('차단된 동영상입니다.')
+                window.alert('차단된 동영상입니다.');
             } else if (res == 'duplicated') {
-                window.alert('이미 등록된 동영상입니다.')
+                window.alert('이미 등록된 동영상입니다.');
             } else if (res == 'not video') {
-                window.alert('유튜브 동영상 링크가 아닙니다.')
+                window.alert('유튜브 동영상 링크가 아닙니다.');
             } else if (res == 'runtime error'){
                 window.alert('런타임 에러')
             } else {
-                window.alert('오류가 발생했습니다. (뭔가 비정상적인 일이 발생함)')
+                window.alert('오류가 발생했습니다. (뭔가 비정상적인 일이 발생함)');
             }
 
             return jsonData;
@@ -369,12 +369,11 @@ async function buttonsInteraction(thisId) {
         window.alert("오류발생");
     }
 
-    window.alert(res);
+    window.alert(res + 'in' + kindOfButton);
 
     return 0;
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
-    playlistLength = 0;
     fillList();
 });

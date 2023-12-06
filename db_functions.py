@@ -124,7 +124,7 @@ def dbAppend(gen : int, code : str):
         
         return "success", arrToAppend
     except:
-        return "runtime error in dbAppend", [0, '', '', 0, 0, 0, 0, 0, 0]
+        return "runtime error", [0, '', '', 0, 0, 0, 0, 0, 0]
 
 def ban(gen : int, i : int, code : str):
     """ban_{gen}.pkl에 유튜브 영상 코드 추가
@@ -155,7 +155,7 @@ def ban(gen : int, i : int, code : str):
         
         return 'success'
     except:
-        return 'runtime error in ban'
+        return 'runtime error'
 
 def deactivate(gen : int, i : int):
     """db_{gen}.pkl에서 i번 인덱스의 비활성화 여부를 1로 바꿈
@@ -203,7 +203,7 @@ def delete(gen : int, i : int):
         
         return 'success'
     except:
-        return 'runtime error in delete'
+        return 'runtime error'
 
 async def downloadVideo(code : str):
     """유튜브의 code 영상 다운로드. 이미 있으면 다운로드 안함
@@ -239,7 +239,7 @@ async def downloadVideo(code : str):
         
         return mp3_file
     except:
-        return "runtime error in downloadVideo"
+        return "runtime error"
 
 if __name__ == "__main__":
     # with open('db/ban_0.pkl', 'wb') as f:
@@ -250,5 +250,5 @@ if __name__ == "__main__":
         d = pickle.load(f)
         print(d)
     
-    # setData(0, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
+    # setData(1, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
     print(getData(0))

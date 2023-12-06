@@ -53,14 +53,14 @@ async def getVideo(gen : int, index : int, code : str):
 @app.get("/list/delete")
 async def deleteItem(gen : int, index : int, code : str):
     result = db.delete(gen, index)
-    return {'result': result}
+    return {'result': result, 'location': 'delete'}
 
 @app.get("/list/ban")
 async def banItem(gen : int, index : int, code: str):
     result = db.ban(gen, index, code)
     if result == 'success':
         db.delete(gen, index)
-    return {'result': result}
+    return {'result': result, 'loaction': 'ban'}
 
 @app.post("/list")
 async def post_url(gen : int, item : linkInput):
