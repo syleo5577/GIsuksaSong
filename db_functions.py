@@ -1,6 +1,7 @@
 import time
 import os
 import pickle
+import boto3
 import moviepy.editor as mp
 from pytube import YouTube
 import link_functions
@@ -16,6 +17,20 @@ import link_functions
 #   삭제할 경우 db에만 기록이 남으며 웹사이트에서는 확인할 수 없음
 
 
+# AWS 자격 증명 구성
+session = boto3.Session()
+s3 = session.client('s3')
+bucket_name = ''
+
+
+def check_file_exist(bucket_name, file_key):
+    try:
+        s3.head_object(Bucket=bucket_name, Key=file_key)
+        return True
+    except:
+        return False
+
+
 def get_data(gen: int):
     """db 데이터 호출
 
@@ -26,19 +41,15 @@ def get_data(gen: int):
         list: DB data
     """
 
-    dir = f"./db/db_{gen}.pkl"
-    if os.path.isfile(dir):
-        with open(dir, "rb") as fr:
-            arr : list[list] = pickle.load(fr)
-    else:
-        arr = []
-        with open(dir, "wb") as fw:
-            pickle.dump([], fw)
-        
-        
-    # db 데이터 받은거 return
+    path = f"db_{gen}.pkl"
 
-    # db 데이터 받은거 return
+    if check_file_exist('버킷이름', path):
+        response = s3.get_object(Bucket=bucket_name, Key=path)
+        body = response['Body'].read()
+        arr = pickle.loads(body)
+    else:
+        set_data(gen, arr := [])
+
     return arr
 
 
@@ -78,9 +89,7 @@ def set_data(gen: int, data: list):
     # 경로 설정
     path = f"./db/db_{gen}.pkl"
 
-    # db 데이터 갱신
-    with open(path, "wb") as fw:
-        pickle.dump(data, fw)
+    s3.put_object(Body=data, Bucket=bucket_name, Key=path)
 
     return 0
 
