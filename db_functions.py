@@ -190,7 +190,8 @@ def deactivate(gen: int, i: int):
             1: runtime error
     """
 
-    try:
+    # try:
+    if True:
         # db 데이터 불러오기
         arr = get_data(gen)
 
@@ -199,8 +200,8 @@ def deactivate(gen: int, i: int):
         set_data(gen, arr)
 
         return 0
-    except:
-        return 1
+    # except:
+    #     return 1
 
 
 def delete(gen: int, i: int):

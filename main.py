@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -95,4 +95,3 @@ async def post_url(gen: int, item: linkInput):
     else:
         print("NOT YOUTUBE VIDEO")
         return {"result": "not video"}
-    

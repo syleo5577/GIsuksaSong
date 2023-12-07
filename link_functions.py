@@ -31,12 +31,10 @@ def get_youtube_video_id(url: str):
         str | None: 유튜브 영상이면 유튜브 영상 코드, 아니면 None을 리턴
     """
 
-    yt_regex = re.compile(
-    r'(https?://)?(www.)?'
-    r'(youtube|youtu|youtube-nocookie).(com|be)/'
-    r'(shorts/|watch?v=|embed/|v/|.+?v=)?([^&=%?]{11})'
-    )
-    
+    yt_regex = re.compile(r'(https?://)?(www\.)?'
+        '(youtube|youtu|youtube-nocookie)\.(com|be)/'
+        '(shorts/|watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})')
+
     if regex_match := yt_regex.match(url):
         return regex_match.group(6)
     else:
