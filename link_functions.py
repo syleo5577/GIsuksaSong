@@ -3,24 +3,6 @@ import re
 from googleapiclient.discovery import build
 
 
-def add_https(url: str):
-    """입력받은 문자열에 https:// 없으면 넣어줌
-
-    Args:
-        url (str): 입력받은 문자열
-
-    Returns:
-        str, 'https://'가 추가된 URL
-    """
-
-    https = re.compile("https{0,1}://")
-
-    if not https.match(url):
-        return "https://" + url
-    else:
-        return url
-
-
 def get_youtube_video_id(url: str):
     """입력받은 URL에서 유튜브 영상 코드 추출
 
@@ -95,7 +77,7 @@ def str_time_to_int(length: int):
 
 
 if __name__ == "__main__":
-    url = add_https(input())
+    url = input()
     code = get_youtube_video_id(url)
     if code:
         print("code:", code)
