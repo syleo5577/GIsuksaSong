@@ -44,7 +44,7 @@ async def root():
 
 @app.get("/list/data")
 async def getData(gen: int):
-    data = db.getDataWithoutDeleted(gen)
+    data = db.get_data_without_deleted(gen)
     return {"arr": data}
 
 
@@ -75,21 +75,20 @@ async def banItem(gen: int, index: int, code: str):
 @app.post("/list")
 async def post_url(gen: int, item: linkInput):
     # print(url)
-    url = link.addHTTPS(item.url)
     url = item.url
     # print(url)
-    code = link.getYoutubeVideoID(url)
+    code = link.get_youtube_video_id(url)
     # print(code)
     if code:
         print("code:", code)
-        r, appendVideoData = db.dbAppend(gen, code)
+        r, new_video_data = db.db_append(gen, code)
         if r == "success":
             return {
                 "result": r,
-                "index": appendVideoData[0],
-                "code": appendVideoData[1],
-                "title": appendVideoData[2],
-                "unixtime": appendVideoData[4]
+                "index": new_video_data[0],
+                "code": new_video_data[1],
+                "title": new_video_data[2],
+                "unixtime": new_video_data[4]
             }
         return {"result": r}
     else:
