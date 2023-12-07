@@ -83,7 +83,6 @@ async def post_url(gen: int, item: linkInput):
     code = link.get_youtube_video_id(url)
     print("code:", code)
     if code:
-        print("code:", code)
         r, new_video_data = db.db_append(gen, code)
         if r == "success":
             return {
