@@ -1,10 +1,10 @@
-import boto3
-import link_functions
-import moviepy.editor as mp
+import time
 import os
 import pickle
+import boto3
+import moviepy.editor as mp
 from pytube import YouTube
-import time
+import link_functions
 
 # 메인 db 이름 형식
 # db_{학년 기수}.pkl (학년 기수를 나타내는 변수는 generation, gen)
