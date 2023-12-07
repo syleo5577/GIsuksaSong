@@ -369,7 +369,7 @@ async function buttonsInteraction(thisId) {
         window.alert("오류발생");
     }
 
-    window.alert(res + 'in' + kindOfButton);
+    window.alert(res + ' in ' + kindOfButton);
 
     return 0;
 }
