@@ -37,12 +37,12 @@ async def root():
     return FileResponse("templates/main.html")
 
 @app.get("/list/data")
-async def getData(gen : int):
-    data = db.getDataWithoutDeleted(gen)
+async def get_data(gen : int):
+    data = db.get_data_without_deleted(gen)
     return {"arr": data} 
 
 @app.get("/list/download")
-async def getVideo(gen : int, index : int, code : str):
+async def get_video(gen : int, index : int, code : str):
     dir = await db.downloadVideo(code)
     if os.path.isfile(dir):
         db.deactivate(gen, index)
@@ -51,12 +51,12 @@ async def getVideo(gen : int, index : int, code : str):
         return {"error": dir, "result": 'runtime error'}
 
 @app.get("/list/delete")
-async def deleteItem(gen : int, index : int, code : str):
+async def delete_item(gen : int, index : int, code : str):
     result = db.delete(gen, index)
     return {'result': result, 'location': 'delete'}
 
 @app.get("/list/ban")
-async def banItem(gen : int, index : int, code: str):
+async def ban_item(gen : int, index : int, code: str):
     result = db.ban(gen, index, code)
     if result == 'success':
         db.delete(gen, index)
@@ -65,16 +65,16 @@ async def banItem(gen : int, index : int, code: str):
 @app.post("/list")
 async def post_url(gen : int, item : linkInput):
     # print(url)
-    url = link.addHTTPS(item.url)
+    url = link.add_https(item.url)
     url = item.url
     # print(url)
-    code = link.getYoutubeVideoID(url)
+    code = link.get_youtube_video_id(url)
     # print(code)
     if code:
         print("code:", code)
-        r, appendVideoData = db.dbAppend(gen, code)
+        r, new_video_data = db.db_append(gen, code)
         if r == "success":
-            return {"result": r, "index": appendVideoData[0], "code": appendVideoData[1], "title": appendVideoData[2], "unixtime":appendVideoData[4]}
+            return {"result": r, "index": new_video_data[0], "code": new_video_data[1], "title": new_video_data[2], "unixtime":new_video_data[4]}
         return {"result": r}
     else:
         print("NOT YOUTUBE VIDEO")

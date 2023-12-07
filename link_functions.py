@@ -1,7 +1,7 @@
 from googleapiclient.discovery import build
 import re
 
-def addHTTPS(url : str):
+def add_https(url : str):
     """입력받은 문자열에 https:// 없으면 넣어줌
 
     Args:
@@ -18,7 +18,7 @@ def addHTTPS(url : str):
     else:
         return url
 
-def getYoutubeVideoID(url : str):
+def get_youtube_video_id(url : str):
     """입력받은 URL에서 유튜브 영상 코드 추출
     
     Args:
@@ -28,16 +28,16 @@ def getYoutubeVideoID(url : str):
         str | None: 유튜브 영상이면 유튜브 영상 코드, 아니면 None을 리턴
     """
     
-    ytRegex = re.compile(r'(https?://)?(www\.)?'
+    yt_regex = re.compile(r'(https?://)?(www\.)?'
         '(youtube|youtu|youtube-nocookie)\.(com|be)/'
         '(shorts/|watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})')
     
-    if regexMatch := ytRegex.match(url):
-        return regexMatch.group(6)
+    if regex_match := yt_regex.match(url):
+        return regex_match.group(6)
     else:
         return None
 
-def getLengthAndTitle(code : str):
+def get_length_and_title(code : str):
     """유튜브 영상 코드 넣으면 영상 시간, 제목 반환함
 
     Args:
@@ -64,9 +64,9 @@ def getLengthAndTitle(code : str):
     length = response1['items'][0]['contentDetails']['duration']
     title = response2['items'][0]['snippet']['title']
 
-    return strTimeToInt(length), title
+    return str_time_to_int(length), title
 
-def strTimeToInt(length : int):
+def str_time_to_int(length : int):
     """유튜브 API에서 받은 시간 형식(PT{hh}H{mm}M{ss}S)을 초단위로 바꿔줌
 
     Args:
@@ -90,10 +90,10 @@ def strTimeToInt(length : int):
     return time
 
 if __name__ == "__main__":
-    url = addHTTPS(input())
-    code = getYoutubeVideoID(url)
+    url = add_https(input())
+    code = get_youtube_video_id(url)
     if code:
         print("code:", code)
-        print(getLengthAndTitle(code))
+        print(get_length_and_title(code))
     else:
         print("NOT YOUTUBE VIDEO")

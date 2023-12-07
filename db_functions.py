@@ -1,3 +1,4 @@
+import boto3
 import link_functions
 import moviepy.editor as mp
 import os
@@ -15,7 +16,23 @@ import time
 #   db에는 영상 코드, 제목, 길이, 등록한 시간, 다운로드 여부, 삭제 여부가 기록됨
 #   삭제할 경우 db에만 기록이 남으며 웹사이트에서는 확인할 수 없음
 
-def getData(gen : int):
+
+
+# AWS 자격 증명 구성
+session = boto3.Session()
+s3 = session.client('s3')
+bucket_name = ''
+
+
+def check_file_exist(bucket_name, file_key):
+    try:
+        s3.head_object(Bucket=bucket_name, Key=file_key)
+        return True
+    except:
+        return False
+
+
+def get_data(gen : int):
     """db 데이터 호출
 
     Args:
@@ -25,19 +42,18 @@ def getData(gen : int):
         list: DB data
     """
     
-    dir = f"./db/db_{gen}.pkl"
-    if os.path.isfile(dir):
-        with open(dir, "rb") as fr:
-            arr : list[list] = pickle.load(fr)
+    path = f"db_{gen}.pkl"
+    
+    if check_file_exist('버킷이름', path):
+        response = s3.get_object(Bucket=bucket_name, Key=path)
+        body = response['Body'].read()
+        arr = pickle.loads(body)
     else:
-        arr = []
-        with open(dir, "wb") as fw:
-            pickle.dump([], fw)
-        
-    # db 데이터 받은거 return
+        set_data(gen, arr := [])
+    
     return arr
 
-def getDataWithoutDeleted(gen : int):
+def get_data_without_deleted(gen : int):
     """db에서 삭제되지 않은 데이터 호출
 
     Args:
@@ -47,18 +63,18 @@ def getDataWithoutDeleted(gen : int):
         list: DB data without deleted index
     """
 
-    arr = getData(gen)
+    arr = get_data(gen)
     
     # db 데이터 받은거 arr[n][6](삭제 여부)=0인거만 newarr에 넣음
-    newarr = []
+    new_arr = []
     l = len(arr)
     for i in range(l):
         if arr[i][6] == 0:
-            newarr.append(arr[i])
+            new_arr.append(arr[i])
         
-    return newarr
+    return new_arr
 
-def setData(gen : int, data : list):
+def set_data(gen : int, data : list):
     """db 데이터 갱신
     
     Args:
@@ -72,13 +88,11 @@ def setData(gen : int, data : list):
     # 경로 설정
     path = f"./db/db_{gen}.pkl"
     
-    # db 데이터 갱신
-    with open(path, "wb") as fw:
-        pickle.dump(data, fw)
-    
+    s3.put_object(Body=data, Bucket=bucket_name, Key=path)
+
     return 0
 
-def dbAppend(gen : int, code : str):
+def db_append(gen : int, code : str):
     """db에 영상 추가
 
     Args:
@@ -90,39 +104,39 @@ def dbAppend(gen : int, code : str):
     """
     
     try:
-        arr = getData(gen)
+        arr = get_data(gen)
         
         # 시간 검사
-        lenth, title = link_functions.getLengthAndTitle(code)
+        lenth, title = link_functions.get_length_and_title(code)
         if lenth > 600: # 10분 넘어가는 영상 거름
             return "timeout", [0, '', '', 0, 0, 0, 0, 0, 0]
         
         # 차단 여부 검사
         if os.path.isfile(f"db/ban_{gen}.pkl"):
             with open(f"db/ban_{gen}.pkl", "rb") as fr:
-                banDict = pickle.load(fr)
-            if code in banDict:
+                ban_dict = pickle.load(fr)
+            if code in ban_dict:
                 return "banned", [0, '', '', 0, 0, 0, 0, 0, 0]
         
         # 중복 검사
-        isDuplicated = False
+        is_duplicated = False
         l = len(arr)
         for i in range(l):
             if (arr[i][1] == code) and (arr[i][5] == 0) and (arr[i][6] == 0):
-                isDuplicated = True
+                is_duplicated = True
                 break
             else:
                 continue
         
-        if isDuplicated:
+        if is_duplicated:
             return "duplicated", [0, '', '', 0, 0, 0, 0, 0, 0]
         
         # (검사를 통과하면) db에 추가
-        arrToAppend = [len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0]
-        arr.append(arrToAppend)
-        setData(gen, arr)
+        arr_to_append = [len(arr), code, title, lenth, int(time.time()//1), 0, 0, 0, 0]
+        arr.append(arr_to_append)
+        set_data(gen, arr)
         
-        return "success", arrToAppend
+        return "success", arr_to_append
     except:
         return "runtime error", [0, '', '', 0, 0, 0, 0, 0, 0]
 
@@ -143,15 +157,15 @@ def ban(gen : int, i : int, code : str):
         dir = f"db/ban_{gen}.pkl"
         if os.path.isfile(dir):
             with open(dir, "rb") as fr:
-                banDict = pickle.load(fr)
+                ban_dict = pickle.load(fr)
         else:
-            banDict = dict()
+            ban_dict = dict()
         
-        banDict[code] = 1
+        ban_dict[code] = 1
         
         # db 업데이트
         with open(dir, "wb") as fw:
-            pickle.dump(banDict, fw)
+            pickle.dump(ban_dict, fw)
         
         return 'success'
     except:
@@ -172,11 +186,11 @@ def deactivate(gen : int, i : int):
     
     try:
         # db 데이터 불러오기
-        arr = getData(gen)
+        arr = get_data(gen)
         
         # db 데이터 바꾸기
         arr[i][5] = 1
-        setData(gen, arr)
+        set_data(gen, arr)
         
         return 0
     except:
@@ -195,11 +209,11 @@ def delete(gen : int, i : int):
     
     try:
         # db 데이터 불러오기
-        arr = getData(gen)
+        arr = get_data(gen)
         
         # db 데이터 바꾸기
         arr[i][6] = 1
-        setData(gen, arr)
+        set_data(gen, arr)
         
         return 'success'
     except:
@@ -251,4 +265,4 @@ if __name__ == "__main__":
         print(d)
     
     # setData(1, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
-    print(getData(0))
+    print(get_data(0))
