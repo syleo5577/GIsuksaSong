@@ -1,8 +1,7 @@
-from fastapi import FastAPI, Request
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles 
+from fastapi.staticfiles import StaticFiles
 import os
 from pydantic import BaseModel
 import db_functions as db
@@ -10,7 +9,11 @@ import link_functions as link
 
 
 app = FastAPI()
-app.mount("/templates", StaticFiles(directory="../GisuksaSong/templates"), name="templates")
+app.mount(
+    "/templates",
+    StaticFiles(directory="../GisuksaSong/templates"),
+    name="templates"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,6 +27,7 @@ app.add_middleware(
 class linkInput(BaseModel):
     url: str
 
+
 class DataStorage(BaseModel):
     data: list[list]
 
@@ -32,17 +36,20 @@ class DataStorage(BaseModel):
 async def blank():
     return "터프가이김성민!"
 
+
 @app.get("/list")
 async def root():
     return FileResponse("templates/main.html")
 
+
 @app.get("/list/data")
-async def getData(gen : int):
+async def getData(gen: int):
     data = db.getDataWithoutDeleted(gen)
-    return {"arr": data} 
+    return {"arr": data}
+
 
 @app.get("/list/download")
-async def getVideo(gen : int, index : int, code : str):
+async def getVideo(gen: int, index: int, code: str):
     dir = await db.downloadVideo(code)
     if os.path.isfile(dir):
         db.deactivate(gen, index)
@@ -50,20 +57,23 @@ async def getVideo(gen : int, index : int, code : str):
     else:
         return {"error": dir, "result": 'runtime error'}
 
+
 @app.get("/list/delete")
-async def deleteItem(gen : int, index : int, code : str):
+async def deleteItem(gen: int, index: int, code: str):
     result = db.delete(gen, index)
     return {'result': result, 'location': 'delete'}
 
+
 @app.get("/list/ban")
-async def banItem(gen : int, index : int, code: str):
+async def banItem(gen: int, index: int, code: str):
     result = db.ban(gen, index, code)
     if result == 'success':
         db.delete(gen, index)
     return {'result': result, 'loaction': 'ban'}
 
+
 @app.post("/list")
-async def post_url(gen : int, item : linkInput):
+async def post_url(gen: int, item: linkInput):
     # print(url)
     url = link.addHTTPS(item.url)
     url = item.url
@@ -74,7 +84,13 @@ async def post_url(gen : int, item : linkInput):
         print("code:", code)
         r, appendVideoData = db.dbAppend(gen, code)
         if r == "success":
-            return {"result": r, "index": appendVideoData[0], "code": appendVideoData[1], "title": appendVideoData[2], "unixtime":appendVideoData[4]}
+            return {
+                "result": r,
+                "index": appendVideoData[0],
+                "code": appendVideoData[1],
+                "title": appendVideoData[2],
+                "unixtime": appendVideoData[4]
+            }
         return {"result": r}
     else:
         print("NOT YOUTUBE VIDEO")
