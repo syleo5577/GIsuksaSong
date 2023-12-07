@@ -105,8 +105,7 @@ def db_append(gen: int, code: str):
         str: 작동 성공/실패 여부. 등록 성공시 영상 정보도 함께 보냄.
     """
 
-    # try:
-    if True:
+    try:
         arr = get_data(gen)
 
         # 시간 검사
@@ -140,8 +139,8 @@ def db_append(gen: int, code: str):
         set_data(gen, arr)
 
         return "success", arr_to_append
-    # except:
-    #     return "runtime error", [0, '', '', 0, 0, 0, 0, 0, 0]
+    except:
+        return "runtime error", [0, '', '', 0, 0, 0, 0, 0, 0]
 
 
 def ban(gen: int, i: int, code: str):
@@ -156,8 +155,7 @@ def ban(gen: int, i: int, code: str):
         str: 실행 결과
     """
 
-    # try:
-    if True:
+    try:
         # db 데이터 불러오기
         dir = f"db/ban_{gen}.pkl"
         if os.path.isfile(dir):
@@ -173,8 +171,8 @@ def ban(gen: int, i: int, code: str):
             pickle.dump(ban_dict, fw)
 
         return 'success'
-    # except:
-    #     return 'runtime error'
+    except:
+        return 'runtime error'
 
 
 def deactivate(gen: int, i: int):
@@ -190,8 +188,7 @@ def deactivate(gen: int, i: int):
             1: runtime error
     """
 
-    # try:
-    if True:
+    try:
         # db 데이터 불러오기
         arr = get_data(gen)
 
@@ -200,8 +197,8 @@ def deactivate(gen: int, i: int):
         set_data(gen, arr)
 
         return 0
-    # except:
-    #     return 1
+    except:
+        return 1
 
 
 def delete(gen: int, i: int):
@@ -215,8 +212,7 @@ def delete(gen: int, i: int):
         str: 실행 결과
     """
 
-    # try:
-    if True:
+    try:
         # db 데이터 불러오기
         arr = get_data(gen)
 
@@ -225,8 +221,8 @@ def delete(gen: int, i: int):
         set_data(gen, arr)
 
         return 'success'
-    # except:
-    #     return 'runtime error'
+    except:
+        return 'runtime error'
 
 
 async def downloadVideo(code: str):
@@ -240,8 +236,7 @@ async def downloadVideo(code: str):
         str: dir path of downloaded file, if fail return 'error'
     """
 
-    # try:
-    if True:
+    try:
         # 파일 존재 여부 확인
         mp4_file = f"db/mp4s/{code}.mp4"
         mp3_file = f"db/mp3s/{code}.mp3"
@@ -263,8 +258,8 @@ async def downloadVideo(code: str):
         os.remove(mp4_file)
 
         return mp3_file
-    # except:
-    #     return "runtime error"
+    except:
+        return "runtime error"
 
 if __name__ == "__main__":
     # with open('db/ban_0.pkl', 'wb') as f:
