@@ -45,12 +45,14 @@ async def root():
 @app.get("/list/data")
 async def getData(gen: int):
     data = db.get_data_without_deleted(gen)
+    print(data)
     return {"arr": data}
 
 
 @app.get("/list/download")
-async def getVideo(gen: int, index: int, code: str):
+async def get_video(gen: int, index: int, code: str):
     dir = await db.download_video(code)
+    print(dir)
     if os.path.isfile(dir):
         db.deactivate(gen, index)
         return FileResponse(dir, headers={"result": 'success'})
@@ -59,14 +61,16 @@ async def getVideo(gen: int, index: int, code: str):
 
 
 @app.get("/list/delete")
-async def deleteItem(gen: int, index: int, code: str):
+async def delete_item(gen: int, index: int, code: str):
     result = db.delete(gen, index)
+    print(result)
     return {'result': result, 'location': 'delete'}
 
 
 @app.get("/list/ban")
-async def banItem(gen: int, index: int, code: str):
+async def ban_item(gen: int, index: int, code: str):
     result = db.ban(gen, index, code)
+    print(result)
     if result == 'success':
         db.delete(gen, index)
     return {'result': result, 'loaction': 'ban'}
@@ -74,11 +78,10 @@ async def banItem(gen: int, index: int, code: str):
 
 @app.post("/list")
 async def post_url(gen: int, item: linkInput):
-    # print(url)
     url = item.url
-    # print(url)
+    print("url:", url)
     code = link.get_youtube_video_id(url)
-    # print(code)
+    print("code:", code)
     if code:
         print("code:", code)
         r, new_video_data = db.db_append(gen, code)
