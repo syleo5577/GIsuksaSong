@@ -1,9 +1,9 @@
+import os
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles 
-import os
 from pydantic import BaseModel
 import db_functions as db
 import link_functions as link

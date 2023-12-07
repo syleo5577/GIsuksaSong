@@ -1,5 +1,6 @@
-from googleapiclient.discovery import build
+import os
 import re
+from googleapiclient.discovery import build
 
 def add_https(url : str):
     """입력받은 문자열에 https:// 없으면 넣어줌
@@ -47,9 +48,7 @@ def get_length_and_title(code : str):
         int, str: 영상 길이, 영상 제목
     """
     
-    f = open("./youtubeAPIkey.txt", "r")
-    api_key = f.readline().strip()
-    f.close()   
+    api_key = os.environ.get('YOUTUBE_API_KEY')
     
     youtube = build('youtube', 'v3', developerKey=api_key)
     response1 = youtube.videos().list(
