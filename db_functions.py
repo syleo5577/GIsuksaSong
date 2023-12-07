@@ -87,7 +87,7 @@ def set_data(gen: int, data: list):
     """
 
     # 경로 설정
-    path = f"./db/db_{gen}.pkl"
+    path = f"db_{gen}.pkl"
 
     s3.put_object(Body=data, Bucket=bucket_name, Key=path)
 
@@ -159,18 +159,21 @@ def ban(gen: int, i: int, code: str):
     # try:
     if True:
         # db 데이터 불러오기
-        dir = f"db/ban_{gen}.pkl"
-        if os.path.isfile(dir):
-            with open(dir, "rb") as fr:
-                ban_dict = pickle.load(fr)
+        path = f"ban_{gen}.pkl"
+
+        if check_file_exist('버킷이름', path):
+            response = s3.get_object(Bucket=bucket_name, Key=path)
+            body = response['Body'].read()
+            ban_dict = pickle.loads(body)
         else:
-            ban_dict = dict()
+            set_data(gen, ban_dict := [])
 
         ban_dict[code] = 1
 
         # db 업데이트
-        with open(dir, "wb") as fw:
-            pickle.dump(ban_dict, fw)
+        path = f"ban_{gen}.pkl"
+
+        s3.put_object(Body=ban_dict, Bucket=bucket_name, Key=path)
 
         return 'success'
     # except:
@@ -229,7 +232,7 @@ def delete(gen: int, i: int):
     #     return 'runtime error'
 
 
-async def downloadVideo(code: str):
+async def download_video(code: str):
     """유튜브의 code 영상 다운로드. 이미 있으면 다운로드 안함
 
     Args:
@@ -267,13 +270,6 @@ async def downloadVideo(code: str):
     #     return "runtime error"
 
 if __name__ == "__main__":
-    # with open('db/ban_0.pkl', 'wb') as f:
-    #     d = dict()
-    #     pickle.dump(d ,f)
 
-    with open('db/ban_0.pkl', 'rb') as f:
-        d = pickle.load(f)
-        print(d)
-
-    # setData(1, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
+    set_data(1, [[0, 'gX9m-rCtSqc', '【Lyric Video】結束バンド「忘れてやらない」／ TVアニメ「ぼっち・ざ・ろっく！」第12話劇中曲', 218, 1198508400, 0, 0, 0, 0]])
     print(get_data(0))

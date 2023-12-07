@@ -50,7 +50,7 @@ async def getData(gen: int):
 
 @app.get("/list/download")
 async def getVideo(gen: int, index: int, code: str):
-    dir = await db.downloadVideo(code)
+    dir = await db.download_video(code)
     if os.path.isfile(dir):
         db.deactivate(gen, index)
         return FileResponse(dir, headers={"result": 'success'})
