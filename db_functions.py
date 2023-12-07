@@ -20,7 +20,7 @@ import link_functions
 # AWS 자격 증명 구성
 session = boto3.Session()
 s3 = session.client('s3')
-bucket_name = ''
+bucket_name = 'elasticbeanstalk-ap-northeast-2-152489268796'
 
 
 def check_file_exist(bucket_name, file_key):
